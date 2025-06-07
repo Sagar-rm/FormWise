@@ -382,8 +382,10 @@ const FormResponses = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1">
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+      <div className="flex-1 w-full md:w-auto">
         <div className="max-w-7xl mx-auto p-4 md:p-8">
           <div className="mb-6">
             <Link
@@ -392,18 +394,18 @@ const FormResponses = () => {
             >
               <ArrowLeft className="w-4 h-4 mr-1" /> Back to Form
             </Link>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{form.title} Responses</h1>
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">{form.title} Responses</h1>
                 <p className="text-gray-600 mt-1">
                   {responses.length} {responses.length === 1 ? "response" : "responses"} received
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Link
                   to={`/form/${formId}`}
                   target="_blank"
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View Form
@@ -413,7 +415,7 @@ const FormResponses = () => {
                     navigator.clipboard.writeText(`${window.location.origin}/form/${formId}`)
                     alert("Form link copied to clipboard!")
                   }}
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <Copy className="w-4 h-4 mr-2" />
                   Copy Link
@@ -421,7 +423,7 @@ const FormResponses = () => {
                 <button
                   onClick={exportToCSV}
                   disabled={!responses.length}
-                  className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export CSV
@@ -431,82 +433,82 @@ const FormResponses = () => {
           </div>
 
           {/* Analytics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
               <div className="flex items-center">
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                <div className="bg-blue-100 p-1.5 md:p-2 rounded-lg">
+                  <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Total Responses</p>
-                  <p className="text-lg font-semibold text-gray-900">{analytics.total}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm font-medium text-gray-500">Total</p>
+                  <p className="text-lg md:text-xl font-semibold text-gray-900">{analytics.total}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
               <div className="flex items-center">
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                <div className="bg-green-100 p-1.5 md:p-2 rounded-lg">
+                  <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Today</p>
-                  <p className="text-lg font-semibold text-gray-900">{analytics.today}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm font-medium text-gray-500">Today</p>
+                  <p className="text-lg md:text-xl font-semibold text-gray-900">{analytics.today}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
               <div className="flex items-center">
-                <div className="bg-yellow-100 p-2 rounded-lg">
-                  <Star className="w-5 h-5 text-yellow-600" />
+                <div className="bg-yellow-100 p-1.5 md:p-2 rounded-lg">
+                  <Star className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Starred</p>
-                  <p className="text-lg font-semibold text-gray-900">{analytics.starred}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm font-medium text-gray-500">Starred</p>
+                  <p className="text-lg md:text-xl font-semibold text-gray-900">{analytics.starred}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4">
               <div className="flex items-center">
-                <div className="bg-red-100 p-2 rounded-lg">
-                  <Flag className="w-5 h-5 text-red-600" />
+                <div className="bg-red-100 p-1.5 md:p-2 rounded-lg">
+                  <Flag className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Flagged</p>
-                  <p className="text-lg font-semibold text-gray-900">{analytics.flagged}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm font-medium text-gray-500">Flagged</p>
+                  <p className="text-lg md:text-xl font-semibold text-gray-900">{analytics.flagged}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* View Mode Selector */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            <div className="flex items-center space-x-1 w-full sm:w-auto">
               <button
                 onClick={() => setViewMode("table")}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-sm font-medium ${
                   viewMode === "table"
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                Table View
+                Table
               </button>
               <button
                 onClick={() => setViewMode("cards")}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-sm font-medium ${
                   viewMode === "cards"
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                 }`}
               >
-                Card View
+                Cards
               </button>
               <button
                 onClick={() => setViewMode("analytics")}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-sm font-medium ${
                   viewMode === "analytics"
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
@@ -519,19 +521,19 @@ const FormResponses = () => {
             {selectedResponses.length > 0 && (
               <button
                 onClick={() => setShowBulkActions(!showBulkActions)}
-                className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <MoreHorizontal className="w-4 h-4 mr-2" />
-                Bulk Actions ({selectedResponses.length})
+                Actions ({selectedResponses.length})
               </button>
             )}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Toolbar */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-grow">
+            <div className="p-3 md:p-4 border-b border-gray-200">
+              <div className="flex flex-col gap-3 md:gap-4">
+                <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
@@ -542,10 +544,10 @@ const FormResponses = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <Filter className="w-4 h-4 mr-2" />
                     Filters
@@ -555,7 +557,7 @@ const FormResponses = () => {
                   {selectedResponses.length > 0 && (
                     <button
                       onClick={handleDeleteSelected}
-                      className="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete ({selectedResponses.length})
@@ -693,10 +695,9 @@ const FormResponses = () => {
               )}
             </AnimatePresence>
 
-            {/* Content based on view mode */}
+            {/* Table View - Mobile Optimized */}
             {viewMode === "table" && (
               <>
-                {/* Responses table */}
                 {responses.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
@@ -717,50 +718,30 @@ const FormResponses = () => {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="w-10 px-4 py-3 text-left">
-                            <input
-                              type="checkbox"
-                              onChange={handleSelectAll}
-                              checked={
-                                selectedResponses.length === paginatedResponses.length && paginatedResponses.length > 0
-                              }
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                          </th>
-                          <th className="w-10 px-2 py-3 text-left"></th>
-                          <th className="w-10 px-2 py-3 text-left"></th>
-                          <th
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                            onClick={() => handleSort("submittedAt")}
-                          >
-                            <div className="flex items-center">
-                              Submitted
-                              {sortConfig.key === "submittedAt" &&
-                                (sortConfig.direction === "asc" ? (
-                                  <ChevronUp className="w-4 h-4 ml-1" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4 ml-1" />
-                                ))}
-                            </div>
-                          </th>
-
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Device
-                          </th>
-
-                          {/* Dynamic columns based on form fields */}
-                          {topFields.map((field) => (
+                    <div className="min-w-full inline-block align-middle">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="w-8 px-2 md:px-4 py-3 text-left">
+                              <input
+                                type="checkbox"
+                                onChange={handleSelectAll}
+                                checked={
+                                  selectedResponses.length === paginatedResponses.length &&
+                                  paginatedResponses.length > 0
+                                }
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                            </th>
+                            <th className="w-8 px-1 md:px-2 py-3 text-left"></th>
+                            <th className="w-8 px-1 md:px-2 py-3 text-left"></th>
                             <th
-                              key={field}
-                              className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                              onClick={() => handleSort(field)}
+                              className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer min-w-[120px]"
+                              onClick={() => handleSort("submittedAt")}
                             >
                               <div className="flex items-center">
-                                {getFieldLabel(field)}
-                                {sortConfig.key === field &&
+                                Submitted
+                                {sortConfig.key === "submittedAt" &&
                                   (sortConfig.direction === "asc" ? (
                                     <ChevronUp className="w-4 h-4 ml-1" />
                                   ) : (
@@ -768,125 +749,148 @@ const FormResponses = () => {
                                   ))}
                               </div>
                             </th>
-                          ))}
 
-                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {paginatedResponses.map((response) => (
-                          <tr
-                            key={response.id}
-                            className={`hover:bg-gray-50 ${selectedResponses.includes(response.id) ? "bg-blue-50" : ""}`}
-                          >
-                            <td className="px-4 py-4">
-                              <input
-                                type="checkbox"
-                                checked={selectedResponses.includes(response.id)}
-                                onChange={() => handleSelectResponse(response.id)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                            </td>
-                            <td className="px-2 py-4">
-                              <button
-                                onClick={() => toggleStarResponse(response.id)}
-                                className="text-gray-400 hover:text-yellow-500"
-                              >
-                                {starredResponses.includes(response.id) ? (
-                                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                ) : (
-                                  <StarOff className="w-5 h-5" />
-                                )}
-                              </button>
-                            </td>
-                            <td className="px-2 py-4">
-                              <button
-                                onClick={() => toggleFlagResponse(response.id)}
-                                className="text-gray-400 hover:text-red-500"
-                              >
-                                {flaggedResponses.includes(response.id) ? (
-                                  <Flag className="w-5 h-5 fill-red-400 text-red-400" />
-                                ) : (
-                                  <Flag className="w-5 h-5" />
-                                )}
-                              </button>
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div>
-                                <div>{format(response.submittedAt, "MMM d, yyyy")}</div>
-                                <div className="text-xs text-gray-400">{format(response.submittedAt, "h:mm a")}</div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex items-center">
-                                {getDeviceIcon(getDeviceType(response.userAgent))}
-                                <span className="ml-2">{getDeviceType(response.userAgent)}</span>
-                              </div>
-                            </td>
+                            <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[80px]">
+                              Device
+                            </th>
 
-                            {/* Dynamic data cells */}
+                            {/* Dynamic columns based on form fields */}
                             {topFields.map((field) => (
-                              <td key={field} className="px-4 py-4 text-sm text-gray-900 max-w-xs">
-                                <div className="truncate" title={response.responses[field] || "-"}>
-                                  {response.responses[field] || "-"}
+                              <th
+                                key={field}
+                                className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer min-w-[150px]"
+                                onClick={() => handleSort(field)}
+                              >
+                                <div className="flex items-center">
+                                  <span className="truncate">{getFieldLabel(field)}</span>
+                                  {sortConfig.key === field &&
+                                    (sortConfig.direction === "asc" ? (
+                                      <ChevronUp className="w-4 h-4 ml-1 flex-shrink-0" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4 ml-1 flex-shrink-0" />
+                                    ))}
                                 </div>
-                              </td>
+                              </th>
                             ))}
 
-                            <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <div className="flex items-center justify-end space-x-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedResponse(response)
-                                    setShowResponseModal(true)
-                                  }}
-                                  className="text-blue-600 hover:text-blue-900"
-                                  title="View Details"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const note = prompt(
-                                      "Add a note to this response:",
-                                      notesResponses[response.id] || "",
-                                    )
-                                    if (note !== null) {
-                                      addNoteToResponse(response.id, note)
-                                    }
-                                  }}
-                                  className="text-green-600 hover:text-green-900"
-                                  title="Add Note"
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm("Are you sure you want to delete this response?")) {
-                                      deleteResponse(response.id)
-                                    }
-                                  }}
-                                  className="text-red-600 hover:text-red-900"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
+                            <th className="px-2 md:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                              Actions
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {paginatedResponses.map((response) => (
+                            <tr
+                              key={response.id}
+                              className={`hover:bg-gray-50 ${selectedResponses.includes(response.id) ? "bg-blue-50" : ""}`}
+                            >
+                              <td className="px-2 md:px-4 py-4">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedResponses.includes(response.id)}
+                                  onChange={() => handleSelectResponse(response.id)}
+                                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                              </td>
+                              <td className="px-1 md:px-2 py-4">
+                                <button
+                                  onClick={() => toggleStarResponse(response.id)}
+                                  className="text-gray-400 hover:text-yellow-500"
+                                >
+                                  {starredResponses.includes(response.id) ? (
+                                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                                  ) : (
+                                    <StarOff className="w-5 h-5" />
+                                  )}
+                                </button>
+                              </td>
+                              <td className="px-1 md:px-2 py-4">
+                                <button
+                                  onClick={() => toggleFlagResponse(response.id)}
+                                  className="text-gray-400 hover:text-red-500"
+                                >
+                                  {flaggedResponses.includes(response.id) ? (
+                                    <Flag className="w-5 h-5 fill-red-400 text-red-400" />
+                                  ) : (
+                                    <Flag className="w-5 h-5" />
+                                  )}
+                                </button>
+                              </td>
+                              <td className="px-2 md:px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>
+                                  <div>{format(response.submittedAt, "MMM d, yyyy")}</div>
+                                  <div className="text-xs text-gray-400">{format(response.submittedAt, "h:mm a")}</div>
+                                </div>
+                              </td>
+                              <td className="px-2 md:px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div className="flex items-center">
+                                  {getDeviceIcon(getDeviceType(response.userAgent))}
+                                  <span className="ml-2">{getDeviceType(response.userAgent)}</span>
+                                </div>
+                              </td>
+
+                              {/* Dynamic data cells */}
+                              {topFields.map((field) => (
+                                <td key={field} className="px-2 md:px-4 py-4 text-sm text-gray-900 max-w-xs">
+                                  <div className="truncate" title={response.responses[field] || "-"}>
+                                    {response.responses[field] || "-"}
+                                  </div>
+                                </td>
+                              ))}
+
+                              <td className="px-2 md:px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div className="flex items-center justify-end space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedResponse(response)
+                                      setShowResponseModal(true)
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900"
+                                    title="View Details"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const note = prompt(
+                                        "Add a note to this response:",
+                                        notesResponses[response.id] || "",
+                                      )
+                                      if (note !== null) {
+                                        addNoteToResponse(response.id, note)
+                                      }
+                                    }}
+                                    className="text-green-600 hover:text-green-900"
+                                    title="Add Note"
+                                  >
+                                    <MessageSquare className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm("Are you sure you want to delete this response?")) {
+                                        deleteResponse(response.id)
+                                      }
+                                    }}
+                                    className="text-red-600 hover:text-red-900"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </>
             )}
 
-            {/* Card View */}
+            {/* Card View - Mobile Optimized */}
             {viewMode === "cards" && (
-              <div className="p-6">
+              <div className="p-3 md:p-6">
                 {responses.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
@@ -896,13 +900,13 @@ const FormResponses = () => {
                     <p className="text-gray-500 mb-4">Share your form to start collecting responses</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {paginatedResponses.map((response) => (
                       <motion.div
                         key={response.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        className="bg-white border border-gray-200 rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
@@ -1231,7 +1235,7 @@ const FormResponses = () => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+                className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
