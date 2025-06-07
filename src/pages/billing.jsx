@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { CreditCard, Download, Check, ArrowLeft, Star } from "lucide-react"
+import { CreditCard, Download, Check, ArrowLeft, Star, Menu, X } from 'lucide-react'
 import Sidebar from "../components/sidebar"
 
 export default function Billing() {
@@ -11,6 +11,7 @@ export default function Billing() {
   const [isMobile, setIsMobile] = useState(false)
   const [isAnnual, setIsAnnual] = useState(true)
   const [currentPlan, setCurrentPlan] = useState("pro")
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -98,30 +99,38 @@ export default function Billing() {
       {!isMobile && <Sidebar />}
 
       <div className="flex-1 overflow-auto">
-        <div className="p-4 md:p-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              {isMobile && (
-                <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-              )}
+        <div className="p-3 sm:p-4 lg:p-8">
+          {/* Mobile Header */}
+          {isMobile && (
+            <div className="flex items-center justify-between mb-4 bg-white rounded-lg p-3 shadow-sm">
+              <button onClick={() => navigate("/dashboard")} className="p-2 hover:bg-gray-100 rounded-lg">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-lg font-bold text-gray-900">Billing</h1>
+              <button onClick={() => setShowMobileMenu(!showMobileMenu)} className="p-2 hover:bg-gray-100 rounded-lg">
+                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
+          )}
+
+          {/* Desktop Header */}
+          {!isMobile && (
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Billing & Plans</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Billing & Plans</h1>
                 <p className="text-gray-600 mt-1">Manage your subscription and billing information</p>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Current Plan */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 md:p-8 text-white mb-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
-              <div className="mb-4 md:mb-0">
-                <h2 className="text-2xl font-bold mb-2">Pro Plan</h2>
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg sm:rounded-xl p-4 sm:p-6 lg:p-8 text-white mb-6 lg:mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between">
+              <div className="mb-4 lg:mb-0">
+                <h2 className="text-xl sm:text-2xl font-bold mb-2">Pro Plan</h2>
                 <p className="text-purple-100 mb-4">$15/month • Next billing: January 15, 2024</p>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                   <div>
                     <p className="text-purple-200">Forms</p>
                     <p className="font-semibold">
@@ -150,26 +159,26 @@ export default function Billing() {
               </div>
 
               <div className="flex flex-col space-y-2">
-                <button className="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                <button className="bg-white text-purple-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base">
                   Manage Plan
                 </button>
-                <button className="bg-white/20 text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/30 transition-colors">
+                <button className="bg-white/20 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-white/30 transition-colors text-sm sm:text-base">
                   Download Invoice
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Plans */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Available Plans</h2>
+            <div className="xl:col-span-2">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-0">Available Plans</h2>
 
                   <div className="flex items-center bg-gray-100 rounded-lg p-1">
                     <button
-                      className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                      className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-all ${
                         !isAnnual ? "bg-white shadow-sm" : ""
                       }`}
                       onClick={() => setIsAnnual(false)}
@@ -177,7 +186,7 @@ export default function Billing() {
                       Monthly
                     </button>
                     <button
-                      className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                      className={`px-2 sm:px-3 py-1 rounded text-xs sm:text-sm font-medium transition-all ${
                         isAnnual ? "bg-white shadow-sm" : ""
                       }`}
                       onClick={() => setIsAnnual(true)}
@@ -192,7 +201,7 @@ export default function Billing() {
                   {plans.map((plan) => (
                     <motion.div
                       key={plan.id}
-                      className={`border-2 rounded-xl p-6 transition-all ${
+                      className={`border-2 rounded-lg sm:rounded-xl p-4 sm:p-6 transition-all ${
                         currentPlan === plan.id
                           ? "border-purple-300 bg-purple-50"
                           : plan.popular
@@ -201,18 +210,18 @@ export default function Billing() {
                       }`}
                       whileHover={{ scale: 1.02 }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between">
+                        <div className="flex-1 mb-4 lg:mb-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
                             {plan.popular && (
-                              <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                              <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full w-fit">
                                 <Star className="w-3 h-3 inline mr-1" />
                                 Popular
                               </span>
                             )}
                             {currentPlan === plan.id && (
-                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full w-fit">
                                 Current Plan
                               </span>
                             )}
@@ -220,8 +229,8 @@ export default function Billing() {
 
                           <p className="text-gray-600 mb-3">{plan.description}</p>
 
-                          <div className="flex items-baseline space-x-2 mb-4">
-                            <span className="text-3xl font-bold text-gray-900">
+                          <div className="flex flex-col sm:flex-row sm:items-baseline space-y-1 sm:space-y-0 sm:space-x-2 mb-4">
+                            <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                               ${isAnnual ? plan.price.annual : plan.price.monthly}
                             </span>
                             <span className="text-gray-600">/month</span>
@@ -232,7 +241,7 @@ export default function Billing() {
                             )}
                           </div>
 
-                          <div className="grid md:grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {plan.features.map((feature, index) => (
                               <div key={index} className="flex items-center text-sm text-gray-700">
                                 <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
@@ -242,13 +251,13 @@ export default function Billing() {
                           </div>
                         </div>
 
-                        <div className="ml-6">
+                        <div className="lg:ml-6">
                           {currentPlan === plan.id ? (
-                            <button className="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg font-medium cursor-not-allowed">
+                            <button className="w-full lg:w-auto bg-gray-100 text-gray-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium cursor-not-allowed text-sm sm:text-base">
                               Current Plan
                             </button>
                           ) : (
-                            <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
+                            <button className="w-full lg:w-auto bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium hover:shadow-lg transition-all text-sm sm:text-base">
                               {plan.id === "free" ? "Downgrade" : "Upgrade"}
                             </button>
                           )}
@@ -261,14 +270,14 @@ export default function Billing() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Payment Method */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
 
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-white" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">•••• •••• •••• 4242</p>
@@ -276,13 +285,13 @@ export default function Billing() {
                   </div>
                 </div>
 
-                <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+                <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base">
                   Update Payment Method
                 </button>
               </div>
 
               {/* Billing History */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Recent Invoices</h3>
                   <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">View All</button>
@@ -291,18 +300,20 @@ export default function Billing() {
                 <div className="space-y-3">
                   {invoices.map((invoice) => (
                     <div key={invoice.id} className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="font-medium text-gray-900">{invoice.id}</p>
-                        <p className="text-sm text-gray-600">{new Date(invoice.date).toLocaleDateString()}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{invoice.id}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          {new Date(invoice.date).toLocaleDateString()}
+                        </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">{invoice.amount}</p>
+                      <div className="text-right flex-shrink-0 ml-4">
+                        <p className="font-medium text-gray-900 text-sm">{invoice.amount}</p>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
                             {invoice.status}
                           </span>
                           <button className="text-gray-400 hover:text-gray-600">
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3 h-3 sm:w-4 sm:h-4" />
                           </button>
                         </div>
                       </div>
@@ -312,7 +323,7 @@ export default function Billing() {
               </div>
 
               {/* Usage Stats */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Usage This Month</h3>
 
                 <div className="space-y-4">

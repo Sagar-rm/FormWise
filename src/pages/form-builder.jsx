@@ -46,8 +46,8 @@ export default function FormBuilder() {
   const { user } = useAuth()
   const { createForm, updateForm, getForm } = useForms()
 
-  // Mobile responsive states
-  const [isMobile, setIsMobile] = useState(false)
+  // Responsive states
+  const [screenSize, setScreenSize] = useState("desktop")
   const [showLeftPanel, setShowLeftPanel] = useState(false)
   const [showRightPanel, setShowRightPanel] = useState(false)
   const [activeTab, setActiveTab] = useState("fields")
@@ -74,21 +74,39 @@ export default function FormBuilder() {
   const dragItem = useRef(null)
   const dragOverItem = useRef(null)
 
-  // Check if mobile and handle responsive behavior
+  // Enhanced responsive detection with more breakpoints
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768
-      setIsMobile(mobile)
-      if (!mobile) {
+    const checkScreenSize = () => {
+      const width = window.innerWidth
+      let newScreenSize = "desktop"
+
+      if (width < 480) {
+        newScreenSize = "mobile-sm"
+      } else if (width < 640) {
+        newScreenSize = "mobile"
+      } else if (width < 768) {
+        newScreenSize = "tablet-sm"
+      } else if (width < 1024) {
+        newScreenSize = "tablet"
+      } else if (width < 1280) {
+        newScreenSize = "desktop-sm"
+      } else {
+        newScreenSize = "desktop"
+      }
+
+      setScreenSize(newScreenSize)
+
+      // Auto-close panels on larger screens
+      if (newScreenSize.includes("desktop")) {
         setShowLeftPanel(false)
         setShowRightPanel(false)
         setShowMobilePreview(false)
       }
     }
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    checkScreenSize()
+    window.addEventListener("resize", checkScreenSize)
+    return () => window.removeEventListener("resize", checkScreenSize)
   }, [])
 
   // Load form data if editing
@@ -98,34 +116,36 @@ export default function FormBuilder() {
     }
   }, [formId])
 
-const loadForm = async () => {
-  if (!formId || formId === "new") return; // Do not load if it's a new form
+  const loadForm = async () => {
+    if (!formId || formId === "new") return
 
-  try {
-    const form = await getForm(formId);
-    if (form) {
-      setFormTitle(form.title || "Untitled Form"); // Set default title if undefined
-      setFormDescription(form.description || ""); // Set default description if undefined
-      setFields(form.fields.map(field => ({
-        ...field,
-        options: field.options || [] // Ensure options is an array
-      })) || []); // Set default fields if undefined
-      setFormSettings(form.settings || {
-        theme: "modern",
-        backgroundColor: "#ffffff",
-        textColor: "#1f2937",
-        submitButtonText: "Submit",
-        thankYouMessage: "Thank you for your submission!",
-        collectEmail: false,
-        allowMultipleSubmissions: true,
-      }); // Set default settings if undefined
+    try {
+      const form = await getForm(formId)
+      if (form) {
+        setFormTitle(form.title || "Untitled Form")
+        setFormDescription(form.description || "")
+        setFields(
+          form.fields?.map((field) => ({
+            ...field,
+            options: field.options || [],
+          })) || [],
+        )
+        setFormSettings(
+          form.settings || {
+            theme: "modern",
+            backgroundColor: "#ffffff",
+            textColor: "#1f2937",
+            submitButtonText: "Submit",
+            thankYouMessage: "Thank you for your submission!",
+            collectEmail: false,
+            allowMultipleSubmissions: true,
+          },
+        )
+      }
+    } catch (error) {
+      console.error("Error loading form:", error)
     }
-  } catch (error) {
-    console.error("Error loading form:", error);
   }
-};
-
-
 
   const fieldTypes = [
     { type: "text", label: "Short Text", icon: <Type className="w-4 h-4" />, category: "basic" },
@@ -155,7 +175,7 @@ const loadForm = async () => {
     setSelectedField(newField.id)
 
     // Close mobile panels after adding field
-    if (isMobile) { 
+    if (screenSize !== "desktop") {
       setShowLeftPanel(false)
     }
   }
@@ -363,8 +383,8 @@ const loadForm = async () => {
 
   const renderLeftPanel = () => (
     <div className="bg-white border-r border-gray-200 h-full overflow-y-auto">
-      {/* Mobile header */}
-      {isMobile && (
+      {/* Mobile/Tablet header */}
+      {screenSize !== "desktop" && (
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="font-semibold text-gray-900">Add Fields</h3>
           <button onClick={() => setShowLeftPanel(false)}>
@@ -373,9 +393,9 @@ const loadForm = async () => {
         </div>
       )}
 
-      {/* Tabs for mobile */}
-      {isMobile && (
-        <div className="flex border-b border-gray-200">
+      {/* Tabs for mobile/tablet */}
+      {screenSize !== "desktop" && (
+        <div className="flex border-b border-gray-200 overflow-x-auto">
           {[
             { id: "fields", label: "Fields", icon: <Layers className="w-4 h-4" /> },
             { id: "design", label: "Design", icon: <Palette className="w-4 h-4" /> },
@@ -384,7 +404,7 @@ const loadForm = async () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              className={`flex-1 flex items-center justify-center space-x-1 py-3 text-xs font-medium ${
+              className={`flex-shrink-0 flex items-center justify-center space-x-1 px-4 py-3 text-xs font-medium whitespace-nowrap ${
                 activeTab === tab.id
                   ? "text-purple-600 border-b-2 border-purple-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -399,7 +419,7 @@ const loadForm = async () => {
       )}
 
       <div className="p-4">
-        {(!isMobile || activeTab === "fields") && (
+        {(screenSize === "desktop" || activeTab === "fields") && (
           <>
             <h3 className="font-semibold text-gray-900 mb-4">Field Types</h3>
 
@@ -468,7 +488,7 @@ const loadForm = async () => {
           </>
         )}
 
-        {isMobile && activeTab === "design" && (
+        {screenSize !== "desktop" && activeTab === "design" && (
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 mb-4">Design Settings</h3>
 
@@ -507,14 +527,14 @@ const loadForm = async () => {
           </div>
         )}
 
-        {isMobile && activeTab === "logic" && (
+        {screenSize !== "desktop" && activeTab === "logic" && (
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 mb-4">Logic & Rules</h3>
             <p className="text-sm text-gray-600">Conditional logic features coming soon!</p>
           </div>
         )}
 
-        {isMobile && activeTab === "settings" && (
+        {screenSize !== "desktop" && activeTab === "settings" && (
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 mb-4">Form Settings</h3>
 
@@ -567,7 +587,7 @@ const loadForm = async () => {
 
   const renderRightPanel = () => (
     <div className="bg-white border-l border-gray-200 h-full overflow-y-auto">
-      {isMobile && (
+      {screenSize !== "desktop" && (
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="font-semibold text-gray-900">Properties</h3>
           <button onClick={() => setShowRightPanel(false)}>
@@ -730,21 +750,21 @@ const loadForm = async () => {
   )
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
-      {!isMobile && <Sidebar />}
+      {screenSize.includes("desktop") && <Sidebar />}
 
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-3 md:p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 md:space-x-4 flex-1 min-w-0">
-              {isMobile && (
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Enhanced Responsive Header */}
+        <div className="bg-white border-b border-gray-200 p-2 sm:p-3 lg:p-4 flex-shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-1 min-w-0">
+              {!screenSize.includes("desktop") && (
                 <button
                   onClick={() => navigate("/dashboard")}
-                  className="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               )}
 
@@ -752,50 +772,64 @@ const loadForm = async () => {
                 type="text"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                className="text-lg md:text-xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 flex-1 min-w-0"
+                className={`font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 flex-1 min-w-0 ${
+                  screenSize === "mobile-sm"
+                    ? "text-sm"
+                    : screenSize === "mobile"
+                      ? "text-base"
+                      : screenSize.includes("tablet")
+                        ? "text-lg"
+                        : "text-lg lg:text-xl"
+                }`}
                 placeholder="Form Title"
               />
-              <span className="text-xs md:text-sm text-gray-500 flex-shrink-0">• Draft</span>
+              <span
+                className={`text-gray-500 flex-shrink-0 whitespace-nowrap ${
+                  screenSize === "mobile-sm" ? "text-xs" : "text-xs lg:text-sm"
+                }`}
+              >
+                • Draft
+              </span>
             </div>
 
-            <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
-              {/* Mobile controls */}
-              {isMobile && (
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              {/* Mobile/Tablet controls */}
+              {!screenSize.includes("desktop") && (
                 <>
                   <button
                     onClick={() => setShowLeftPanel(true)}
-                    className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
+                    className="p-1.5 sm:p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 flex-shrink-0"
                     title="Add Fields"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
 
                   {selectedField && (
                     <button
                       onClick={() => setShowRightPanel(true)}
-                      className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+                      className="p-1.5 sm:p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex-shrink-0"
                       title="Field Properties"
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   )}
 
                   <button
                     onClick={() => setShowMobilePreview(!showMobilePreview)}
-                    className={`p-2 rounded-lg font-medium transition-all ${
+                    className={`p-1.5 sm:p-2 rounded-lg font-medium transition-all flex-shrink-0 ${
                       showMobilePreview
                         ? "bg-gray-200 text-gray-700"
                         : "bg-purple-100 text-purple-700 hover:bg-purple-200"
                     }`}
                     title="Preview"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 </>
               )}
 
               {/* Desktop controls */}
-              {!isMobile && (
+              {screenSize.includes("desktop") && (
                 <>
                   <div className="flex items-center bg-gray-100 rounded-lg p-1">
                     <button
@@ -833,43 +867,86 @@ const loadForm = async () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 text-sm"
+                className={`bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 flex-shrink-0 ${
+                  screenSize === "mobile-sm"
+                    ? "px-2 py-1.5 text-xs"
+                    : screenSize === "mobile"
+                      ? "px-3 py-2 text-sm"
+                      : "px-3 lg:px-4 py-2 text-sm"
+                }`}
               >
-                <Save className="w-4 h-4 mr-1 md:mr-2 inline" />
-                <span className="hidden md:inline">{saving ? "Saving..." : "Save"}</span>
+                <Save className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>
+                  {saving ? "Saving..." : "Save"}
+                </span>
               </button>
 
               <button
                 onClick={handlePublish}
                 disabled={saving}
-                className="bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 text-sm"
+                className={`bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 flex-shrink-0 ${
+                  screenSize === "mobile-sm"
+                    ? "px-2 py-1.5 text-xs"
+                    : screenSize === "mobile"
+                      ? "px-3 py-2 text-sm"
+                      : "px-3 lg:px-4 py-2 text-sm"
+                }`}
               >
-                <Globe className="w-4 h-4 mr-1 md:mr-2 inline" />
-                <span className="hidden md:inline">Publish</span>
+                <Globe className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>Publish</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex">
-          {/* Left Panel - Desktop */}
-          {!isMobile && <div className="w-64">{renderLeftPanel()}</div>}
+        <div className="flex-1 flex min-h-0">
+          {/* Left Panel - Desktop with responsive width */}
+          {screenSize.includes("desktop") && (
+            <div className={`flex-shrink-0 ${screenSize === "desktop-sm" ? "w-56" : "w-64"}`}>{renderLeftPanel()}</div>
+          )}
 
-          {/* Form Canvas */}
-          <div className="flex-1 overflow-auto">
-            {/* Mobile: Show preview or builder */}
-            {isMobile ? (
+          {/* Form Canvas with responsive width */}
+          <div className="flex-1 overflow-auto min-w-0">
+            {/* Mobile/Tablet: Show preview or builder */}
+            {!screenSize.includes("desktop") ? (
               <div className="h-full">
                 {showMobilePreview ? (
-                  // Mobile Preview Mode
-                  <div className="p-4 bg-gray-50 h-full">
-                    <div className="max-w-sm mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
-                      <div className="p-6">
+                  // Mobile/Tablet Preview Mode
+                  <div className={`bg-gray-50 h-full ${screenSize.includes("mobile") ? "p-2 sm:p-4" : "p-4 lg:p-6"}`}>
+                    <div
+                      className={`mx-auto bg-white rounded-lg shadow-sm border border-gray-200 ${
+                        screenSize === "mobile-sm"
+                          ? "max-w-full"
+                          : screenSize === "mobile"
+                            ? "max-w-sm"
+                            : screenSize.includes("tablet")
+                              ? "max-w-2xl"
+                              : "max-w-3xl"
+                      }`}
+                    >
+                      <div className={`${screenSize.includes("mobile") ? "p-4 sm:p-6" : "p-6 lg:p-8"}`}>
                         <div className="mb-6">
-                          <h1 className="text-xl font-bold mb-2" style={{ color: formSettings.textColor }}>
+                          <h1
+                            className={`font-bold mb-2 ${
+                              screenSize === "mobile-sm"
+                                ? "text-lg"
+                                : screenSize === "mobile"
+                                  ? "text-xl"
+                                  : "text-xl lg:text-2xl"
+                            }`}
+                            style={{ color: formSettings.textColor }}
+                          >
                             {formTitle}
                           </h1>
-                          {formDescription && <p className="text-gray-600 text-sm">{formDescription}</p>}
+                          {formDescription && (
+                            <p
+                              className={`text-gray-600 ${
+                                screenSize.includes("mobile") ? "text-sm" : "text-sm lg:text-base"
+                              }`}
+                            >
+                              {formDescription}
+                            </p>
+                          )}
                         </div>
 
                         <div className="space-y-4">
@@ -903,7 +980,7 @@ const loadForm = async () => {
                     </div>
                   </div>
                 ) : (
-                  // Mobile Builder Mode
+                  // Mobile/Tablet Builder Mode
                   <div className="p-4 h-full">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
                       <div className="p-4 h-full overflow-y-auto">
@@ -912,7 +989,9 @@ const loadForm = async () => {
                             type="text"
                             value={formTitle}
                             onChange={(e) => setFormTitle(e.target.value)}
-                            className="text-xl font-bold w-full bg-transparent border-none focus:outline-none focus:ring-0 p-0 mb-2"
+                            className={`font-bold w-full bg-transparent border-none focus:outline-none focus:ring-0 p-0 mb-2 ${
+                              screenSize === "mobile" ? "text-xl" : "text-2xl"
+                            }`}
                             placeholder="Form Title"
                           />
                           <textarea
@@ -928,7 +1007,13 @@ const loadForm = async () => {
                           {fields.length === 0 ? (
                             <div className="text-center py-8">
                               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                              <h3 className="text-lg font-medium text-gray-900 mb-2">Start building</h3>
+                              <h3
+                                className={`font-medium text-gray-900 mb-2 ${
+                                  screenSize === "mobile" ? "text-lg" : "text-xl"
+                                }`}
+                              >
+                                Start building
+                              </h3>
                               <p className="text-gray-600 mb-4 text-sm">Tap the + button to add your first field</p>
                               <button
                                 onClick={() => setShowLeftPanel(true)}
@@ -993,10 +1078,16 @@ const loadForm = async () => {
               </div>
             ) : (
               // Desktop Layout
-              <div className="p-4 md:p-8">
+              <div className={`${screenSize === "desktop-sm" ? "p-3 lg:p-6" : "p-4 lg:p-8"} h-full overflow-y-auto`}>
                 <div
-                  className={`mx-auto bg-white rounded-lg shadow-sm border border-gray-200 ${
-                    previewMode === "mobile" ? "max-w-sm" : previewMode === "tablet" ? "max-w-2xl" : "max-w-4xl"
+                  className={`mx-auto bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
+                    previewMode === "mobile"
+                      ? "max-w-sm"
+                      : previewMode === "tablet"
+                        ? "max-w-2xl"
+                        : screenSize === "desktop-sm"
+                          ? "max-w-5xl"
+                          : "max-w-6xl"
                   }`}
                   style={{
                     backgroundColor: formSettings.backgroundColor,
@@ -1004,7 +1095,7 @@ const loadForm = async () => {
                   }}
                 >
                   {/* Form Header */}
-                  <div className="p-4 md:p-8">
+                  <div className="p-4 lg:p-8">
                     {/* Form Header */}
                     <div className="mb-8">
                       <input
@@ -1030,20 +1121,7 @@ const loadForm = async () => {
                         <div className="text-center py-12">
                           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                           <h3 className="text-lg font-medium text-gray-900 mb-2">Start building your form</h3>
-                          <p className="text-gray-600 mb-4">
-                            {isMobile
-                              ? "Tap the + button to add fields"
-                              : "Add fields from the left panel to get started"}
-                          </p>
-                          {isMobile && (
-                            <button
-                              onClick={() => setShowLeftPanel(true)}
-                              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
-                            >
-                              <Plus className="w-4 h-4 mr-2 inline" />
-                              Add Your First Field
-                            </button>
-                          )}
+                          <p className="text-gray-600 mb-4">Add fields from the left panel to get started</p>
                         </div>
                       ) : (
                         fields.map((field, index) => (
@@ -1054,19 +1132,14 @@ const loadForm = async () => {
                                 ? "border-purple-300 bg-purple-50"
                                 : "border-transparent hover:border-gray-200"
                             }`}
-                            onClick={() => {
-                              setSelectedField(field.id)
-                              if (isMobile) {
-                                setShowRightPanel(true)
-                              }
-                            }}
-                            draggable={!showPreview && !isMobile}
+                            onClick={() => setSelectedField(field.id)}
+                            draggable={!showPreview}
                             onDragStart={() => handleDragStart(index)}
                             onDragEnter={() => handleDragEnter(index)}
                             onDragEnd={handleDragEnd}
                             layout
                           >
-                            {!showPreview && !isMobile && (
+                            {!showPreview && (
                               <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
                               </div>
@@ -1128,14 +1201,16 @@ const loadForm = async () => {
             )}
           </div>
 
-          {/* Right Panel - Desktop */}
-          {!isMobile && !showPreview && <div className="w-80">{renderRightPanel()}</div>}
+          {/* Right Panel - Desktop with responsive width */}
+          {screenSize.includes("desktop") && !showPreview && (
+            <div className={`flex-shrink-0 ${screenSize === "desktop-sm" ? "w-72" : "w-80"}`}>{renderRightPanel()}</div>
+          )}
         </div>
       </div>
 
-      {/* Mobile Panels */}
+      {/* Mobile/Tablet Panels with responsive widths */}
       <AnimatePresence>
-        {isMobile && showLeftPanel && (
+        {!screenSize.includes("desktop") && showLeftPanel && (
           <motion.div
             className="fixed inset-0 z-50 bg-black bg-opacity-50"
             initial={{ opacity: 0 }}
@@ -1144,10 +1219,16 @@ const loadForm = async () => {
             onClick={() => setShowLeftPanel(false)}
           >
             <motion.div
-              className="absolute left-0 top-0 bottom-0 w-80 max-w-[90vw]"
-              initial={{ x: -320 }}
+              className={`absolute left-0 top-0 bottom-0 ${
+                screenSize === "mobile-sm"
+                  ? "w-full max-w-[95vw]"
+                  : screenSize === "mobile"
+                    ? "w-80 max-w-[90vw]"
+                    : "w-96 max-w-[85vw]"
+              }`}
+              initial={{ x: -400 }}
               animate={{ x: 0 }}
-              exit={{ x: -320 }}
+              exit={{ x: -400 }}
               onClick={(e) => e.stopPropagation()}
             >
               {renderLeftPanel()}
@@ -1155,7 +1236,7 @@ const loadForm = async () => {
           </motion.div>
         )}
 
-        {isMobile && showRightPanel && (
+        {!screenSize.includes("desktop") && showRightPanel && (
           <motion.div
             className="fixed inset-0 z-50 bg-black bg-opacity-50"
             initial={{ opacity: 0 }}
@@ -1164,10 +1245,16 @@ const loadForm = async () => {
             onClick={() => setShowRightPanel(false)}
           >
             <motion.div
-              className="absolute right-0 top-0 bottom-0 w-80 max-w-[90vw]"
-              initial={{ x: 320 }}
+              className={`absolute right-0 top-0 bottom-0 ${
+                screenSize === "mobile-sm"
+                  ? "w-full max-w-[95vw]"
+                  : screenSize === "mobile"
+                    ? "w-80 max-w-[90vw]"
+                    : "w-96 max-w-[85vw]"
+              }`}
+              initial={{ x: 400 }}
               animate={{ x: 0 }}
-              exit={{ x: 320 }}
+              exit={{ x: 400 }}
               onClick={(e) => e.stopPropagation()}
             >
               {renderRightPanel()}
@@ -1175,6 +1262,6 @@ const loadForm = async () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>  
+    </div>
   )
 }
