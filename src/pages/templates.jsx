@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react"
 import Sidebar from "../components/sidebar"
+import MobileNavigation from "../components/mobile-navigation"
 import { useForms } from "../hooks/use-forms"
 
 export default function Templates() {
@@ -468,6 +469,7 @@ export default function Templates() {
           )}
         </div>
       </div>
+      {isMobile && <MobileNavigation activePath="/templates" />}
     </div>
   )
 }

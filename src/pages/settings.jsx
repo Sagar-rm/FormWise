@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import Sidebar from "../components/sidebar"
 import { useAuth } from "../hooks/use-auth"
+import MobileNavigation from "../components/mobile-navigation" // Import MobileNavigation component
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -487,6 +488,7 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      {isMobile && <MobileNavigation activePath="/settings" />}
     </div>
   )
 }

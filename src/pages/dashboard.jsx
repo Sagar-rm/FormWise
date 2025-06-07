@@ -187,15 +187,6 @@ export default function Dashboard() {
       ],
     },
     {
-      title: "Organization",
-      items: [
-        { icon: <Folder className="w-5 h-5" />, label: "Folders", path: "/folders" },
-        { icon: <Archive className="w-5 h-5" />, label: "Archive", path: "/archive" },
-        { icon: <Share2 className="w-5 h-5" />, label: "Shared", path: "/shared" },
-        { icon: <Star className="w-5 h-5" />, label: "Favorites", path: "/favorites" },
-      ],
-    },
-    {
       title: "Tools & Integrations",
       items: [
         { icon: <Zap className="w-5 h-5" />, label: "Integrations", path: "/integrations" },
@@ -883,7 +874,7 @@ export default function Dashboard() {
                                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          navigate(`/form-responses/${form.id}`)
+                                          navigate(`/builder/${form.id}`)
                                         }}
                                       >
                                         <Edit className="w-4 h-4 mr-2" />

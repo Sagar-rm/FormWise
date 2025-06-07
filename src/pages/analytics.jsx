@@ -31,12 +31,14 @@ import {
   TrendingUp,
   Clock,
   BarChart3,
+  Bell,
 } from "lucide-react"
 import { useFormsAnalytics, useForms } from "../hooks/use-forms"
 import { useAuth } from "../hooks/use-auth"
 import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import Sidebar from "../components/sidebar"
+import MobileNavigation from "../components/mobile-navigation"
 
 // Helper function to generate date ranges
 const getDateRange = (days) => {
@@ -63,6 +65,14 @@ const Analytics = () => {
     activeForms: 0,
     totalViews: 0,
   })
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   // Fetch analytics data based on date range
   useEffect(() => {
@@ -288,23 +298,44 @@ const Analytics = () => {
   if (loading || loadingAnalytics || loadingForms) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">
+        {!isMobile && <Sidebar />}
+        <div className="flex-1 pb-16 md:pb-0">
+          <div className="p-4 md:p-8">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {/* Mobile loading header */}
+              {isMobile && (
+                <div className="mb-6">
+                  <div className="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-48"></div>
+                </div>
+              )}
+
+              {/* Desktop loading header */}
+              {!isMobile && (
+                <div className="mb-8">
+                  <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-96"></div>
+                </div>
+              )}
+
+              {/* Stats cards loading */}
+              <div
+                className={`grid gap-4 mb-6 ${isMobile ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"}`}
+              >
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                  <div key={i} className={`bg-gray-200 rounded-xl ${isMobile ? "h-24" : "h-32"}`}></div>
                 ))}
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="h-80 bg-gray-200 rounded"></div>
-                <div className="h-80 bg-gray-200 rounded"></div>
+
+              {/* Charts loading */}
+              <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`}>
+                <div className={`bg-gray-200 rounded-xl ${isMobile ? "h-48" : "h-80"}`}></div>
+                <div className={`bg-gray-200 rounded-xl ${isMobile ? "h-48" : "h-80"}`}></div>
               </div>
             </div>
           </div>
         </div>
+        {isMobile && <MobileNavigation activePath="/analytics" />}
       </div>
     )
   }
@@ -313,24 +344,29 @@ const Analytics = () => {
   if (forms.length === 0) {
     return (
       <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center max-w-md">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-              <BarChart3 className="w-8 h-8" />
+        {!isMobile && <Sidebar />}
+        <div className="flex-1 pb-16 md:pb-0">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="text-center max-w-md">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+                <BarChart3 className="w-8 h-8" />
+              </div>
+              <h2 className={`font-bold text-gray-800 mb-2 ${isMobile ? "text-xl" : "text-2xl"}`}>No Analytics Yet</h2>
+              <p className={`text-gray-600 mb-6 ${isMobile ? "text-sm" : "text-base"}`}>
+                Create your first form to start collecting data and see analytics here.
+              </p>
+              <Link
+                to="/form-builder/new"
+                className={`inline-flex items-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${
+                  isMobile ? "px-4 py-2 text-sm" : "px-6 py-3"
+                }`}
+              >
+                Create Your First Form
+              </Link>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Analytics Yet</h2>
-            <p className="text-gray-600 mb-6">
-              Create your first form to start collecting data and see analytics here.
-            </p>
-            <Link
-              to="/form-builder/new"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Create Your First Form
-            </Link>
           </div>
         </div>
+        {isMobile && <MobileNavigation activePath="/analytics" />}
       </div>
     )
   }
@@ -357,63 +393,108 @@ const Analytics = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1">
-        <div className="max-w-7xl mx-auto p-4 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Analytics Dashboard</h1>
-              <p className="text-gray-600 mt-1">Track your form performance and user engagement</p>
-            </div>
+      {!isMobile && <Sidebar />}
+      <div className="flex-1 pb-16 md:pb-0">
+        <div className="p-4 md:p-8">
+          {/* Mobile Header */}
+          {isMobile && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-xl font-bold text-gray-800">Analytics</h1>
+                  <p className="text-sm text-gray-600">Track your form performance</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={exportAnalytics}
+                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                    title="Export Data"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                  </button>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <div className="relative">
+              {/* Mobile Date Range Selector */}
+              <div className="relative mb-4">
                 <select
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className="appearance-none pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full appearance-none pl-4 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
                   <option value="7">Last 7 days</option>
                   <option value="30">Last 30 days</option>
                   <option value="90">Last 90 days</option>
                   <option value="365">Last year</option>
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Header */}
+          {!isMobile && (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Analytics Dashboard</h1>
+                <p className="text-gray-600 mt-1">Track your form performance and user engagement</p>
               </div>
 
-              <button
-                onClick={exportAnalytics}
-                className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </button>
-            </div>
-          </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <select
+                    value={dateRange}
+                    onChange={(e) => setDateRange(e.target.value)}
+                    className="appearance-none pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="365">Last year</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                </div>
 
-          {/* Stats cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <button
+                  onClick={exportAnalytics}
+                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Stats cards - Mobile optimized */}
+          <div className={`grid gap-4 mb-6 ${isMobile ? "grid-cols-2" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"}`}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Total Forms</p>
-                  <h3 className="text-2xl font-bold text-gray-800 mt-1">{totalStats.totalForms}</h3>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>Total Forms</p>
+                  <h3 className={`font-bold text-gray-800 mt-1 ${isMobile ? "text-lg" : "text-2xl"}`}>
+                    {totalStats.totalForms}
+                  </h3>
                 </div>
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                <div className={`bg-blue-100 rounded-lg flex-shrink-0 ${isMobile ? "p-1.5" : "p-2"}`}>
+                  <FileText className={`text-blue-600 ${isMobile ? "w-4 h-4" : "w-5 h-5"}`} />
                 </div>
               </div>
-              <div className="flex items-center mt-4">
-                <div className="text-xs font-medium text-green-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3 mr-1" />
+              <div className={`flex items-center ${isMobile ? "mt-2" : "mt-4"}`}>
+                <div className={`font-medium text-green-600 flex items-center ${isMobile ? "text-xs" : "text-xs"}`}>
+                  <ArrowUpRight className={`mr-1 ${isMobile ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
                   {totalStats.totalForms > 0 ? Math.round((totalStats.activeForms / totalStats.totalForms) * 100) : 0}%
                 </div>
-                <span className="text-xs text-gray-500 ml-2">Active forms</span>
+                <span className={`text-gray-500 ml-2 ${isMobile ? "text-xs" : "text-xs"}`}>Active</span>
               </div>
             </motion.div>
 
@@ -421,23 +502,25 @@ const Analytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Total Responses</p>
-                  <h3 className="text-2xl font-bold text-gray-800 mt-1">{totalStats.totalResponses}</h3>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>Responses</p>
+                  <h3 className={`font-bold text-gray-800 mt-1 ${isMobile ? "text-lg" : "text-2xl"}`}>
+                    {totalStats.totalResponses}
+                  </h3>
                 </div>
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                <div className={`bg-green-100 rounded-lg flex-shrink-0 ${isMobile ? "p-1.5" : "p-2"}`}>
+                  <CheckCircle className={`text-green-600 ${isMobile ? "w-4 h-4" : "w-5 h-5"}`} />
                 </div>
               </div>
-              <div className="flex items-center mt-4">
-                <div className="text-xs font-medium text-green-600 flex items-center">
-                  <TrendingUp className="w-3 h-3 mr-1" />
+              <div className={`flex items-center ${isMobile ? "mt-2" : "mt-4"}`}>
+                <div className={`font-medium text-green-600 flex items-center ${isMobile ? "text-xs" : "text-xs"}`}>
+                  <TrendingUp className={`mr-1 ${isMobile ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
                   {responseData.slice(-7).reduce((sum, day) => sum + day.responses, 0)}
                 </div>
-                <span className="text-xs text-gray-500 ml-2">Last 7 days</span>
+                <span className={`text-gray-500 ml-2 ${isMobile ? "text-xs" : "text-xs"}`}>7 days</span>
               </div>
             </motion.div>
 
@@ -445,23 +528,25 @@ const Analytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Total Views</p>
-                  <h3 className="text-2xl font-bold text-gray-800 mt-1">{totalStats.totalViews}</h3>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>Views</p>
+                  <h3 className={`font-bold text-gray-800 mt-1 ${isMobile ? "text-lg" : "text-2xl"}`}>
+                    {totalStats.totalViews}
+                  </h3>
                 </div>
-                <div className="bg-amber-100 p-2 rounded-lg">
-                  <Eye className="w-5 h-5 text-amber-600" />
+                <div className={`bg-amber-100 rounded-lg flex-shrink-0 ${isMobile ? "p-1.5" : "p-2"}`}>
+                  <Eye className={`text-amber-600 ${isMobile ? "w-4 h-4" : "w-5 h-5"}`} />
                 </div>
               </div>
-              <div className="flex items-center mt-4">
-                <div className="text-xs font-medium text-green-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3 mr-1" />
+              <div className={`flex items-center ${isMobile ? "mt-2" : "mt-4"}`}>
+                <div className={`font-medium text-green-600 flex items-center ${isMobile ? "text-xs" : "text-xs"}`}>
+                  <ArrowUpRight className={`mr-1 ${isMobile ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
                   {viewsData.slice(-7).reduce((sum, day) => sum + day.views, 0)}
                 </div>
-                <span className="text-xs text-gray-500 ml-2">Last 7 days</span>
+                <span className={`text-gray-500 ml-2 ${isMobile ? "text-xs" : "text-xs"}`}>7 days</span>
               </div>
             </motion.div>
 
@@ -469,38 +554,44 @@ const Analytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.3 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
               <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Conversion Rate</p>
-                  <h3 className="text-2xl font-bold text-gray-800 mt-1">{conversionData?.rate || 0}%</h3>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-medium text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>Conversion</p>
+                  <h3 className={`font-bold text-gray-800 mt-1 ${isMobile ? "text-lg" : "text-2xl"}`}>
+                    {conversionData?.rate || 0}%
+                  </h3>
                 </div>
-                <div className="bg-purple-100 p-2 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <div className={`bg-purple-100 rounded-lg flex-shrink-0 ${isMobile ? "p-1.5" : "p-2"}`}>
+                  <Users className={`text-purple-600 ${isMobile ? "w-4 h-4" : "w-5 h-5"}`} />
                 </div>
               </div>
-              <div className="flex items-center mt-4">
-                <div className="text-xs font-medium text-green-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3 mr-1" />
+              <div className={`flex items-center ${isMobile ? "mt-2" : "mt-4"}`}>
+                <div className={`font-medium text-green-600 flex items-center ${isMobile ? "text-xs" : "text-xs"}`}>
+                  <ArrowUpRight className={`mr-1 ${isMobile ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
                   {conversionData?.responses || 0}
                 </div>
-                <span className="text-xs text-gray-500 ml-2">From {conversionData?.views || 0} views</span>
+                <span className={`text-gray-500 ml-2 ${isMobile ? "text-xs" : "text-xs"} truncate`}>
+                  from {conversionData?.views || 0}
+                </span>
               </div>
             </motion.div>
           </div>
 
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Charts - Mobile optimized */}
+          <div className={`grid gap-4 mb-6 ${isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`}>
             {/* Responses over time */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-6">Responses Over Time</h3>
-              <div className="h-64">
+              <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? "text-base" : "text-lg"}`}>
+                Responses Over Time
+              </h3>
+              <div className={isMobile ? "h-48" : "h-64"}>
                 {responseData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={responseData}>
@@ -513,12 +604,13 @@ const Analytics = () => {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="formattedDate"
-                        tick={{ fontSize: 12 }}
-                        tickMargin={10}
+                        tick={{ fontSize: isMobile ? 10 : 12 }}
+                        tickMargin={8}
                         axisLine={false}
                         tickLine={false}
+                        interval={isMobile ? "preserveStartEnd" : 0}
                       />
-                      <YAxis tick={{ fontSize: 12 }} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} tickMargin={8} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} />
                       <Area
                         type="monotone"
@@ -533,8 +625,8 @@ const Analytics = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     <div className="text-center">
-                      <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p>No response data available</p>
+                      <Clock className={`mx-auto mb-2 text-gray-300 ${isMobile ? "w-8 h-8" : "w-12 h-12"}`} />
+                      <p className={isMobile ? "text-sm" : "text-base"}>No response data available</p>
                     </div>
                   </div>
                 )}
@@ -546,23 +638,25 @@ const Analytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-6">Today's Activity</h3>
-              <div className="h-64">
+              <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? "text-base" : "text-lg"}`}>
+                Today's Activity
+              </h3>
+              <div className={isMobile ? "h-48" : "h-64"}>
                 {hourlyData.some((d) => d.responses > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={hourlyData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="hour"
-                        tick={{ fontSize: 12 }}
-                        tickMargin={10}
+                        tick={{ fontSize: isMobile ? 10 : 12 }}
+                        tickMargin={8}
                         axisLine={false}
                         tickLine={false}
-                        interval={2}
+                        interval={isMobile ? 3 : 2}
                       />
-                      <YAxis tick={{ fontSize: 12 }} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} tickMargin={8} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} />
                       <Bar dataKey="responses" fill="#10B981" radius={[4, 4, 0, 0]} name="Responses" />
                     </BarChart>
@@ -570,8 +664,8 @@ const Analytics = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     <div className="text-center">
-                      <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p>No activity today</p>
+                      <Clock className={`mx-auto mb-2 text-gray-300 ${isMobile ? "w-8 h-8" : "w-12 h-12"}`} />
+                      <p className={isMobile ? "text-sm" : "text-base"}>No activity today</p>
                     </div>
                   </div>
                 )}
@@ -579,35 +673,38 @@ const Analytics = () => {
             </motion.div>
           </div>
 
-          {/* Views vs Responses Comparison */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Views vs Responses and Device breakdown - Mobile stacked */}
+          <div className={`grid gap-4 mb-6 ${isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-3"}`}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:col-span-2"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6 lg:col-span-2"}`}
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-6">Views vs Responses</h3>
-              <div className="h-64">
+              <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? "text-base" : "text-lg"}`}>
+                Views vs Responses
+              </h3>
+              <div className={isMobile ? "h-48" : "h-64"}>
                 {viewsData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={viewsData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="formattedDate"
-                        tick={{ fontSize: 12 }}
-                        tickMargin={10}
+                        tick={{ fontSize: isMobile ? 10 : 12 }}
+                        tickMargin={8}
                         axisLine={false}
                         tickLine={false}
+                        interval={isMobile ? "preserveStartEnd" : 0}
                       />
-                      <YAxis tick={{ fontSize: 12 }} tickMargin={10} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} tickMargin={8} axisLine={false} tickLine={false} />
                       <Tooltip content={<CustomTooltip />} />
                       <Line
                         type="monotone"
                         dataKey="views"
                         stroke="#F59E0B"
                         strokeWidth={2}
-                        dot={{ r: 4 }}
+                        dot={{ r: isMobile ? 2 : 4 }}
                         name="Views"
                       />
                       <Line
@@ -615,7 +712,7 @@ const Analytics = () => {
                         dataKey="responses"
                         stroke="#3B82F6"
                         strokeWidth={2}
-                        dot={{ r: 4 }}
+                        dot={{ r: isMobile ? 2 : 4 }}
                         name="Responses"
                       />
                     </LineChart>
@@ -623,8 +720,8 @@ const Analytics = () => {
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     <div className="text-center">
-                      <BarChart3 className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p>No data available</p>
+                      <BarChart3 className={`mx-auto mb-2 text-gray-300 ${isMobile ? "w-8 h-8" : "w-12 h-12"}`} />
+                      <p className={isMobile ? "text-sm" : "text-base"}>No data available</p>
                     </div>
                   </div>
                 )}
@@ -636,10 +733,12 @@ const Analytics = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-6">Device Breakdown</h3>
-              <div className="h-64 flex items-center justify-center">
+              <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? "text-base" : "text-lg"}`}>
+                Device Breakdown
+              </h3>
+              <div className={`flex items-center justify-center ${isMobile ? "h-48" : "h-64"}`}>
                 {deviceData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -647,8 +746,8 @@ const Analytics = () => {
                         data={deviceData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
+                        innerRadius={isMobile ? 25 : 40}
+                        outerRadius={isMobile ? 50 : 80}
                         paddingAngle={5}
                         dataKey="value"
                         label={({ name, percentage }) => `${name} ${percentage}%`}
@@ -663,45 +762,38 @@ const Analytics = () => {
                   </ResponsiveContainer>
                 ) : (
                   <div className="text-center text-gray-500">
-                    <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No device data available</p>
+                    <Clock className={`mx-auto mb-2 text-gray-300 ${isMobile ? "w-8 h-8" : "w-12 h-12"}`} />
+                    <p className={isMobile ? "text-sm" : "text-base"}>No device data available</p>
                   </div>
                 )}
               </div>
             </motion.div>
           </div>
 
-          {/* Top performing forms */}
+          {/* Top performing forms - Mobile optimized */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+            className={`bg-white rounded-xl shadow-sm border border-gray-200 ${isMobile ? "p-4" : "p-6"}`}
           >
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">Top Performing Forms</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <th className="px-4 py-2">Form</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2">Total Responses</th>
-                    <th className="px-4 py-2">Period Responses</th>
-                    <th className="px-4 py-2">Views</th>
-                    <th className="px-4 py-2">Conversion</th>
-                    <th className="px-4 py-2">Last Response</th>
-                    <th className="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {topForms.map((form) => (
-                    <tr key={form.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <Link to={`/form-builder/${form.id}`} className="text-blue-600 hover:text-blue-800 font-medium">
+            <h3 className={`font-semibold text-gray-800 mb-4 ${isMobile ? "text-base" : "text-lg"}`}>
+              Top Performing Forms
+            </h3>
+
+            {isMobile ? (
+              // Mobile card layout
+              <div className="space-y-3">
+                {topForms.length > 0 ? (
+                  topForms.slice(0, 5).map((form) => (
+                    <div key={form.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <Link
+                          to={`/form-builder/${form.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm truncate flex-1 mr-2"
+                        >
                           {form.title}
                         </Link>
-                      </td>
-                      <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                             form.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
@@ -709,61 +801,150 @@ const Analytics = () => {
                         >
                           {form.status || "draft"}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium">{form.responses}</td>
-                      <td className="px-4 py-3 text-gray-600">{form.responsesInRange}</td>
-                      <td className="px-4 py-3">{form.views}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            form.conversionRate > 10
-                              ? "bg-green-100 text-green-800"
-                              : form.conversionRate > 5
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {form.conversionRate}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {form.lastResponse ? format(form.lastResponse, "MMM d, yyyy") : "No responses"}
-                      </td>
-                      <td className="px-4 py-3">
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
+                        <div>
+                          <span className="font-medium text-gray-900">{form.responses}</span>
+                          <div>Responses</div>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-900">{form.views}</span>
+                          <div>Views</div>
+                        </div>
+                        <div>
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
+                              form.conversionRate > 10
+                                ? "bg-green-100 text-green-800"
+                                : form.conversionRate > 5
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {form.conversionRate}%
+                          </span>
+                          <div>Conversion</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 pt-2 border-t border-gray-100">
                         <Link
                           to={`/form-responses/${form.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                         >
-                          View Responses
+                          View Responses →
                         </Link>
-                      </td>
-                    </tr>
-                  ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">No form data available</p>
+                  </div>
+                )}
 
-                  {topForms.length === 0 && (
-                    <tr>
-                      <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
-                        <div className="flex flex-col items-center">
-                          <FileText className="w-12 h-12 text-gray-300 mb-2" />
-                          <p>No form data available</p>
-                        </div>
-                      </td>
+                {topForms.length > 5 && (
+                  <div className="text-center pt-2">
+                    <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-800">
+                      View all forms →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Desktop table layout
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2">Form</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2">Total Responses</th>
+                      <th className="px-4 py-2">Period Responses</th>
+                      <th className="px-4 py-2">Views</th>
+                      <th className="px-4 py-2">Conversion</th>
+                      <th className="px-4 py-2">Last Response</th>
+                      <th className="px-4 py-2">Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {topForms.map((form) => (
+                      <tr key={form.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <Link
+                            to={`/form-builder/${form.id}`}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            {form.title}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              form.status === "published" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {form.status || "draft"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium">{form.responses}</td>
+                        <td className="px-4 py-3 text-gray-600">{form.responsesInRange}</td>
+                        <td className="px-4 py-3">{form.views}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              form.conversionRate > 10
+                                ? "bg-green-100 text-green-800"
+                                : form.conversionRate > 5
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {form.conversionRate}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {form.lastResponse ? format(form.lastResponse, "MMM d, yyyy") : "No responses"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link
+                            to={`/form-responses/${form.id}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View Responses
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
 
-            {topForms.length > 0 && (
-              <div className="mt-4 text-right">
-                <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-800">
-                  View all forms →
-                </Link>
+                    {topForms.length === 0 && (
+                      <tr>
+                        <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <FileText className="w-12 h-12 text-gray-300 mb-2" />
+                            <p>No form data available</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+
+                {topForms.length > 0 && (
+                  <div className="mt-4 text-right">
+                    <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-800">
+                      View all forms →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
         </div>
       </div>
+      {isMobile && <MobileNavigation activePath="/analytics" />}
     </div>
   )
 }

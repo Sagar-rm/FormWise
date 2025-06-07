@@ -13,7 +13,11 @@ import AuthPage from "./pages/auth"
 import FormViewer from "./pages/form-viewer"
 import FormResponses from "./pages/form-responses"
 import ContactPage from "./pages/contact"
+import Forms from "./pages/forms"
+import Notifications from "./pages/notifications"
 import NotFoundPage from "./pages/404"
+import Help from "./pages/help"
+import Support from "./pages/support"
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -95,6 +99,19 @@ function AppRoutes() {
                     } />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="/notifications" element={<Notifications />} />
+            <Route path="/help" element={<Help />} />
+                        <Route path="/support" element={<Support />} />
+
+
+            <Route
+        path="/forms"
+        element={
+          <ProtectedRoute>
+            <Forms />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }
