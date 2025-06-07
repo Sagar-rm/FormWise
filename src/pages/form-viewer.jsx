@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Send, CheckCircle, AlertCircle, Star, Upload, ImageIcon, Clock, Shield } from "lucide-react"
+import { ArrowLeft, Send, CheckCircle, AlertCircle, Star, Upload, ImageIcon, Clock, Shield } from 'lucide-react'
 import { useForms, useFormResponses } from "../hooks/use-forms"
 
 export default function FormViewer() {
@@ -331,10 +331,10 @@ export default function FormViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-4 sm:py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <button
             onClick={() => navigate("/")}
             className="flex items-center text-gray-600 hover:text-purple-600 mb-4 transition-colors"
@@ -346,7 +346,7 @@ export default function FormViewer() {
 
         {/* Form */}
         <motion.div
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
+          className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -356,14 +356,14 @@ export default function FormViewer() {
           }}
         >
           {/* Form Header */}
-          <div className="p-8 border-b border-gray-200">
-            <h1 className="text-3xl font-bold mb-4" style={{ color: form.settings?.textColor }}>
+          <div className="p-6 sm:p-8 border-b border-gray-200">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: form.settings?.textColor }}>
               {form.title}
             </h1>
-            {form.description && <p className="text-gray-600 text-lg leading-relaxed">{form.description}</p>}
+            {form.description && <p className="text-gray-600 text-base sm:text-lg leading-relaxed">{form.description}</p>}
 
             {/* Form Info */}
-            <div className="flex items-center space-x-6 mt-6 text-sm text-gray-500">
+            <div className="flex items-center space-x-4 sm:space-x-6 mt-6 text-sm text-gray-500">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-1" />
                 <span>~{Math.max(2, Math.ceil(form.fields?.length * 0.5))} min</span>
@@ -376,7 +376,7 @@ export default function FormViewer() {
           </div>
 
           {/* Form Fields */}
-          <form onSubmit={handleSubmit} className="p-8">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             <div className="space-y-6">
               {form.fields?.map((field, index) => (
                 <motion.div
@@ -410,7 +410,7 @@ export default function FormViewer() {
               <motion.button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 sm:py-4 px-6 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 whileHover={{ scale: submitting ? 1 : 1.02 }}
                 whileTap={{ scale: submitting ? 1 : 0.98 }}
               >
