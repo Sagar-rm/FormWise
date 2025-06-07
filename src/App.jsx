@@ -11,6 +11,9 @@ import Settings from "./pages/settings"
 import Billing from "./pages/billing"
 import AuthPage from "./pages/auth"
 import FormViewer from "./pages/form-viewer"
+import FormResponses from "./pages/form-responses"
+import ContactPage from "./pages/contact"
+import NotFoundPage from "./pages/404"
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -85,6 +88,13 @@ function AppRoutes() {
         }
       />
       <Route path="/form/:formId" element={<FormViewer />} />
+      <Route path="/form-responses/:formId" element={
+                  <ProtectedRoute>
+                    <FormResponses />
+                  </ProtectedRoute>
+                    } />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

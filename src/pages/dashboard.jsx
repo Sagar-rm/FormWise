@@ -55,7 +55,7 @@ export default function Dashboard() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [showMobileActions, setShowMobileActions] = useState(null)
-  const [viewMode, setViewMode] = useState("grid")
+  const [viewMode, setViewMode] = useState("list")
   const [sortBy, setSortBy] = useState("recent")
   const [filterStatus, setFilterStatus] = useState("all")
   const navigate = useNavigate()
@@ -229,13 +229,12 @@ export default function Dashboard() {
       event.stopPropagation()
     }
 
-    const shareableLink = `http://localhost:5173/form/${formId}`
+    const shareableLink = `${import.meta.env.VITE_SERVER_URL}/form/${formId}`
 
     // Copy the link to the clipboard
     navigator.clipboard
       .writeText(shareableLink)
       .then(() => {
-        alert("Link copied to clipboard!")
       })
       .catch((error) => {
         console.error("Error copying link: ", error)
@@ -275,7 +274,7 @@ export default function Dashboard() {
   }
 
   const handleFormClick = (formId) => {
-    navigate(`/builder/${formId}`)
+    navigate(`/form-responses/${formId}`)
   }
 
   const renderEnhancedMobileBottomNav = () => (
@@ -884,7 +883,7 @@ export default function Dashboard() {
                                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          navigate(`/builder/${form.id}`)
+                                          navigate(`/form-responses/${form.id}`)
                                         }}
                                       >
                                         <Edit className="w-4 h-4 mr-2" />
