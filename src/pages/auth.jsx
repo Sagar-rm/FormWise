@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react"
@@ -9,15 +9,19 @@ import { useAuth } from "../hooks/use-auth"
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  })
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" })
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const navigate = useNavigate()
-  const { signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth()
+  const { user, loading: authLoading, signIn, signUp, signInWithGoogle, signInWithGithub } = useAuth()
+
+  // Check if user is already logged in and redirect to dashboard
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate("/dashboard")
+    }
+  }, [user, authLoading, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,54 +30,62 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        await signIn(formData.email, formData.password)
+        await signIn(formData.email, formData.password, rememberMe)
       } else {
         await signUp(formData.email, formData.password)
       }
       navigate("/dashboard")
     } catch (error) {
-      setError(error.message)
+      console.error("Authentication error:", error)
+      setError(
+        error.code === "auth/invalid-credential"
+          ? "Invalid email or password"
+          : error.message || "An error occurred during authentication",
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleSocialSignIn = async (provider) => {
     setLoading(true)
     setError("")
     try {
-      await signInWithGoogle()
+      if (provider === "google") {
+        await signInWithGoogle(rememberMe)
+      } else {
+        await signInWithGithub(rememberMe)
+      }
       navigate("/dashboard")
     } catch (error) {
-      setError(error.message)
+      console.error("Social auth error:", error)
+      setError(error.message || "An error occurred during authentication")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGithubSignIn = async () => {
-    setLoading(true)
-    setError("")
-    try {
-      await signInWithGithub()
-      navigate("/dashboard")
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
+  const handleInputChange = useCallback((e) => {
+    setFormData((prevData) => ({
+      ...prevData,
       [e.target.name]: e.target.value,
-    })
+    }))
+  }, [])
+
+  // If still checking auth state, show loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      {/* Background animation */}
       <div className="absolute inset-0">
         {[...Array(4)].map((_, i) => (
           <motion.div
@@ -98,7 +110,6 @@ export default function AuthPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Back to home button */}
         <motion.button
           className="flex items-center text-gray-600 hover:text-purple-600 mb-8 transition-colors"
           onClick={() => navigate("/")}
@@ -114,7 +125,6 @@ export default function AuthPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Logo */}
           <div className="flex items-center justify-center mb-8">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mr-3">
               <span className="text-white font-bold text-lg">F</span>
@@ -124,20 +134,15 @@ export default function AuthPage() {
             </span>
           </div>
 
-          {/* Toggle between login and signup */}
           <div className="flex bg-gray-100 rounded-lg p-1 mb-8">
             <button
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
               onClick={() => setIsLogin(true)}
             >
               Sign In
             </button>
             <button
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                !isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${!isLogin ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
               onClick={() => setIsLogin(false)}
             >
               Sign Up
@@ -209,7 +214,12 @@ export default function AuthPage() {
             {isLogin && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
                   <span className="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
                 <a href="#" className="text-sm text-purple-600 hover:text-purple-500">
@@ -225,7 +235,16 @@ export default function AuthPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <span>Authenticating...</span>
+                </div>
+              ) : isLogin ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
             </motion.button>
           </form>
 
@@ -241,7 +260,7 @@ export default function AuthPage() {
 
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
-                onClick={handleGoogleSignIn}
+                onClick={() => handleSocialSignIn("google")}
                 disabled={loading}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >
@@ -267,7 +286,7 @@ export default function AuthPage() {
               </button>
 
               <button
-                onClick={handleGithubSignIn}
+                onClick={() => handleSocialSignIn("github")}
                 disabled={loading}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
               >

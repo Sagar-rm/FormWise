@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import {
@@ -18,7 +18,21 @@ import {
   Globe,
   ChevronDown,
   ChevronUp,
+  Send,
 } from "lucide-react"
+
+// Debounce function
+const debounce = (func, wait) => {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
 
 // Header Component
 const Header = () => {
@@ -26,19 +40,21 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const handleScroll = () => {
+  const handleScroll = useCallback(
+    debounce(() => {
       setIsScrolled(window.scrollY > 20)
-    }
+    }, 100),
+    [],
+  )
+
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  }, [handleScroll])
 
   return (
     <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/80 backdrop-blur-lg shadow-lg" : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 h-20 ${isScrolled ? "bg-white/80 backdrop-blur-lg shadow-lg" : "bg-transparent"}`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
@@ -127,41 +143,57 @@ const Header = () => {
 // Hero Section
 const HeroSection = () => {
   const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState(0)
+
+  const formPreviews = [
+    {
+      title: "Customer Feedback Survey",
+      responses: "1,247",
+      completion: "94%",
+      fields: [
+        { type: "rating", label: "Overall satisfaction", value: 4 },
+        { type: "text", label: "What did you like most?", placeholder: "Great customer service and fast delivery..." },
+        { type: "select", label: "How did you hear about us?", value: "Social Media" },
+      ],
+    },
+    {
+      title: "Event Registration Form",
+      responses: "856",
+      completion: "87%",
+      fields: [
+        { type: "text", label: "Full Name", placeholder: "John Smith" },
+        { type: "email", label: "Email Address", placeholder: "john@example.com" },
+        { type: "checkbox", label: "Dietary Restrictions", options: ["Vegetarian", "Vegan", "Gluten-free"] },
+      ],
+    },
+    {
+      title: "Product Feedback",
+      responses: "2,103",
+      completion: "91%",
+      fields: [
+        { type: "rating", label: "Product Quality", value: 5 },
+        { type: "rating", label: "Value for Money", value: 4 },
+        { type: "textarea", label: "Additional Comments", placeholder: "The product exceeded my expectations..." },
+      ],
+    },
+  ]
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Animated background elements */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 pt-24">
       <div className="absolute inset-0">
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-64 h-64 bg-gradient-to-r from-purple-200/30 to-blue-200/30 rounded-full blur-3xl"
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -100, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 10 + i * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-            style={{
-              left: `${20 + i * 15}%`,
-              top: `${10 + i * 10}%`,
-            }}
+            animate={{ x: [0, 100, 0], y: [0, -100, 0], scale: [1, 1.2, 1] }}
+            transition={{ duration: 10 + i * 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            style={{ left: `${20 + i * 15}%`, top: `${10 + i * 10}%` }}
           />
         ))}
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-          <motion.div
-            className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm font-medium text-purple-700 mb-8 border border-purple-200"
-            whileHover={{ scale: 1.05 }}
-          >
-          </motion.div>
-
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
             Beautiful Forms
             <br />
@@ -204,38 +236,207 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* Hero Image/Demo */}
         <motion.div
           className="mt-16 relative"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl mx-auto border border-gray-200">
-            <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Customer Feedback Form</h3>
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="bg-white rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    How would you rate our service?
-                  </label>
+          {/* Dashboard Preview */}
+          <div className="bg-white rounded-3xl shadow-2xl max-w-6xl mx-auto border border-gray-200 overflow-hidden">
+            {/* Dashboard Header */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
                   <div className="flex space-x-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-6 h-6 text-yellow-400 fill-current" />
+                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  </div>
+                  <span className="text-white font-medium">FormWise Dashboard</span>
+                </div>
+                <div className="text-gray-400 text-sm">formwise.app</div>
+              </div>
+            </div>
+
+            {/* Dashboard Content */}
+            <div className="p-6 bg-gray-50">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <motion.div
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Responses</p>
+                      <p className="text-2xl font-bold text-gray-900">4,206</p>
+                    </div>
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-green-600" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Completion Rate</p>
+                      <p className="text-2xl font-bold text-gray-900">91%</p>
+                    </div>
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Users className="w-5 h-5 text-blue-600" />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Active Forms</p>
+                      <p className="text-2xl font-bold text-gray-900">12</p>
+                    </div>
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-purple-600" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Form Preview Tabs */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200">
+                  <div className="flex space-x-0">
+                    {formPreviews.map((form, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setActiveTab(index)}
+                        className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === index
+                            ? "border-purple-600 text-purple-600 bg-purple-50"
+                            : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {form.title}
+                      </button>
                     ))}
                   </div>
                 </div>
-                <div className="bg-white rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Any additional comments?</label>
-                  <div className="h-20 bg-gray-50 rounded border-2 border-dashed border-gray-200"></div>
-                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-6"
+                  >
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{formPreviews[activeTab].title}</h3>
+                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+                          <span>{formPreviews[activeTab].responses} responses</span>
+                          <span>•</span>
+                          <span>{formPreviews[activeTab].completion} completion rate</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Live</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {formPreviews[activeTab].fields.map((field, fieldIndex) => (
+                        <motion.div
+                          key={fieldIndex}
+                          className="space-y-2"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: fieldIndex * 0.1 }}
+                        >
+                          <label className="block text-sm font-medium text-gray-700">{field.label}</label>
+
+                          {field.type === "rating" && (
+                            <div className="flex space-x-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-6 h-6 ${
+                                    star <= field.value ? "text-yellow-400 fill-current" : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          )}
+
+                          {field.type === "text" && (
+                            <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-600">
+                              {field.placeholder}
+                            </div>
+                          )}
+
+                          {field.type === "email" && (
+                            <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-600">
+                              {field.placeholder}
+                            </div>
+                          )}
+
+                          {field.type === "textarea" && (
+                            <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 h-20 text-gray-600">
+                              {field.placeholder}
+                            </div>
+                          )}
+
+                          {field.type === "select" && (
+                            <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-600">
+                              {field.value}
+                            </div>
+                          )}
+
+                          {field.type === "checkbox" && (
+                            <div className="space-y-2">
+                              {field.options.map((option, optionIndex) => (
+                                <div key={optionIndex} className="flex items-center space-x-2">
+                                  <div
+                                    className={`w-4 h-4 rounded border-2 ${optionIndex === 0 ? "bg-purple-600 border-purple-600" : "border-gray-300"}`}
+                                  >
+                                    {optionIndex === 0 && <Check className="w-3 h-3 text-white" />}
+                                  </div>
+                                  <span className="text-sm text-gray-700">{option}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <motion.button
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium flex items-center"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit Response
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -397,8 +598,7 @@ const PricingSection = () => {
               />
             </motion.button>
             <span className={`ml-3 ${isAnnual ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
-              Annual
-              <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Save 33%</span>
+              Annual<span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Save 33%</span>
             </span>
           </div>
         </motion.div>
@@ -407,9 +607,7 @@ const PricingSection = () => {
           {plans.map((plan, index) => (
             <motion.div
               key={index}
-              className={`bg-white rounded-2xl p-8 relative ${
-                plan.popular ? "ring-2 ring-purple-600 shadow-2xl scale-105" : "shadow-lg"
-              }`}
+              className={`bg-white rounded-2xl p-8 relative ${plan.popular ? "ring-2 ring-purple-600 shadow-2xl scale-105" : "shadow-lg"}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -448,11 +646,7 @@ const PricingSection = () => {
               </ul>
 
               <motion.button
-                className={`w-full py-3 px-6 rounded-xl font-semibold transition-all ${
-                  plan.popular
-                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg"
-                    : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-                }`}
+                className={`w-full py-3 px-6 rounded-xl font-semibold transition-all ${plan.popular ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg" : "bg-gray-100 text-gray-900 hover:bg-gray-200"}`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate("/auth")}
@@ -515,7 +709,7 @@ const TestimonialsSection = () => {
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={index}
-              className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200"
+              className="bg-gcradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -646,26 +840,14 @@ const CTASection = () => {
 
   return (
     <section className="py-24 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 relative overflow-hidden">
-      {/* Background animation */}
       <div className="absolute inset-0">
         {[...Array(3)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-96 h-96 bg-white/10 rounded-full blur-3xl"
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -50, 0],
-              scale: [1, 1.1, 1],
-            }}
-            transition={{
-              duration: 8 + i * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-            style={{
-              left: `${10 + i * 30}%`,
-              top: `${20 + i * 20}%`,
-            }}
+            animate={{ x: [0, 100, 0], y: [0, -50, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 8 + i * 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            style={{ left: `${10 + i * 30}%`, top: `${20 + i * 20}%` }}
           />
         ))}
       </div>

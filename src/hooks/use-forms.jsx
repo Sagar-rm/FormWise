@@ -18,9 +18,11 @@ import {
 } from "firebase/firestore"
 import { db } from "../lib/firebase"
 import { useAuth } from "./use-auth"
+import { useNotifications, NotificationHelpers } from "./use-notifications"
 
 export const useForms = () => {
   const { user } = useAuth()
+  const { createNotification } = useNotifications()
   const [forms, setForms] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -70,10 +72,13 @@ export const useForms = () => {
       }
 
       const docRef = await addDoc(collection(db, "forms"), newForm)
+
+      // Create notification for form creation
+      await createNotification(NotificationHelpers.formCreated(formData.title, docRef.id))
+
       return docRef.id
     } catch (error) {
       console.error("Error creating form:", error)
-      console.log(newForm)
       throw error
     }
   }
@@ -82,15 +87,25 @@ export const useForms = () => {
     if (!user) throw new Error("User not authenticated")
 
     try {
-      console.log(updates) // Log the updates object
-
       const validUpdates = Object.fromEntries(Object.entries(updates).filter(([key, value]) => value !== undefined))
 
       const formRef = doc(db, "forms", formId)
+
+      // Get current form data to check for status changes
+      const currentForm = await getDoc(formRef)
+      const currentData = currentForm.data()
+
       await updateDoc(formRef, {
         ...validUpdates,
         updatedAt: Timestamp.now(),
       })
+
+      // Create notifications for specific updates
+      if (updates.status === "published" && currentData.status !== "published") {
+        await createNotification(NotificationHelpers.formPublished(updates.title || currentData.title, formId))
+      } else if (updates.title || updates.fields) {
+        await createNotification(NotificationHelpers.formUpdated(updates.title || currentData.title, formId))
+      }
     } catch (error) {
       console.error("Error updating form:", error)
       throw error
@@ -101,6 +116,10 @@ export const useForms = () => {
     if (!user) throw new Error("User not authenticated")
 
     try {
+      // Get form title before deletion
+      const formDoc = await getDoc(doc(db, "forms", formId))
+      const formTitle = formDoc.data()?.title || "Unknown Form"
+
       // Delete all responses for this form first
       const responsesQuery = query(collection(db, "formResponses"), where("formId", "==", formId))
       const responsesSnapshot = await getDocs(responsesQuery)
@@ -110,33 +129,35 @@ export const useForms = () => {
 
       // Then delete the form
       await deleteDoc(doc(db, "forms", formId))
+
+      // Create notification for form deletion
+      await createNotification(NotificationHelpers.formDeleted(formTitle))
     } catch (error) {
       console.error("Error deleting form:", error)
       throw error
     }
   }
 
-const getForm = async (formId) => {
-  try {
-    const formRef = doc(db, "forms", formId);
-    const formSnap = await getDoc(formRef);
+  const getForm = async (formId) => {
+    try {
+      const formRef = doc(db, "forms", formId)
+      const formSnap = await getDoc(formRef)
 
-    if (formSnap.exists()) {
-      const data = formSnap.data();
-      return {
-        id: formSnap.id,
-        ...data,
-        createdAt: data.createdAt?.toDate(),
-        updatedAt: data.updatedAt?.toDate(),
-      };
+      if (formSnap.exists()) {
+        const data = formSnap.data()
+        return {
+          id: formSnap.id,
+          ...data,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        }
+      }
+      return null
+    } catch (error) {
+      console.error("Error getting form:", error)
+      throw error
     }
-    return null; // Return null if the form does not exist
-  } catch (error) {
-    console.error("Error getting form:", error);
-    throw error;
   }
-};
-
 
   const duplicateForm = async (formId) => {
     try {
@@ -156,7 +177,12 @@ const getForm = async (formId) => {
       delete duplicatedForm.createdAt
       delete duplicatedForm.updatedAt
 
-      return await createForm(duplicatedForm)
+      const newFormId = await createForm(duplicatedForm)
+
+      // Create notification for duplication (override the creation notification)
+      await createNotification(NotificationHelpers.formDuplicated(form.title, newFormId))
+
+      return newFormId
     } catch (error) {
       console.error("Error duplicating form:", error)
       throw error
@@ -174,6 +200,19 @@ const getForm = async (formId) => {
     }
   }
 
+  const shareForm = async (formId) => {
+    try {
+      const form = await getForm(formId)
+      if (!form) throw new Error("Form not found")
+
+      // Create notification for sharing
+      await createNotification(NotificationHelpers.formShared(form.title, formId))
+    } catch (error) {
+      console.error("Error sharing form:", error)
+      throw error
+    }
+  }
+
   return {
     forms,
     loading,
@@ -183,10 +222,12 @@ const getForm = async (formId) => {
     getForm,
     duplicateForm,
     incrementFormViews,
+    shareForm,
   }
 }
 
 export const useFormResponses = (formId) => {
+  const { createNotification } = useNotifications()
   const [responses, setResponses] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -227,19 +268,32 @@ export const useFormResponses = (formId) => {
         responses: responseData,
         submittedAt: Timestamp.now(),
         userAgent: navigator.userAgent,
-        ipAddress: null, // Would need server-side implementation
+        ipAddress: null,
         ...metadata,
       }
 
       // Add the response
       await addDoc(collection(db, "formResponses"), response)
 
-      // Increment the form's response count
+      // Get form details and update response count
       const formRef = doc(db, "forms", formId)
+      const formDoc = await getDoc(formRef)
+      const formData = formDoc.data()
+
+      const newResponseCount = (formData.responseCount || 0) + 1
+
       await updateDoc(formRef, {
         responseCount: increment(1),
         lastResponseAt: Timestamp.now(),
       })
+
+      // Create notification for new response (only for form owner)
+      if (formData.userId) {
+        await createNotification({
+          ...NotificationHelpers.responseReceived(formData.title, formId, newResponseCount),
+          userId: formData.userId, // Override to send to form owner
+        })
+      }
 
       return true
     } catch (error) {

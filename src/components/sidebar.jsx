@@ -16,11 +16,13 @@ import {
   ChevronRight,
   Palette,
 } from "lucide-react"
+import { useAuth } from "../hooks/use-auth"
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuth()
 
   const menuItems = [
     { icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard", path: "/dashboard" },
@@ -39,7 +41,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem("formwise_auth")
-    navigate("/")
+    logout()
   }
 
   return (

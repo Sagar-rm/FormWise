@@ -9,6 +9,9 @@ import {
   GithubAuthProvider,
   signOut,
   onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
 } from "firebase/auth"
 import { auth } from "../lib/firebase"
 
@@ -35,22 +38,31 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe
   }, [])
 
-  const signIn = async (email, password) => {
-    await signInWithEmailAndPassword(auth, email, password)
+  const signIn = async (email, password, rememberMe = false) => {
+    // Set the persistence type based on the rememberMe checkbox
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence
+    await setPersistence(auth, persistenceType)
+    return await signInWithEmailAndPassword(auth, email, password)
   }
 
   const signUp = async (email, password) => {
-    await createUserWithEmailAndPassword(auth, email, password)
+    // For new sign ups, we'll use session persistence by default
+    await setPersistence(auth, browserSessionPersistence)
+    return await createUserWithEmailAndPassword(auth, email, password)
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (rememberMe = false) => {
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence
+    await setPersistence(auth, persistenceType)
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    return await signInWithPopup(auth, provider)
   }
 
-  const signInWithGithub = async () => {
+  const signInWithGithub = async (rememberMe = false) => {
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence
+    await setPersistence(auth, persistenceType)
     const provider = new GithubAuthProvider()
-    await signInWithPopup(auth, provider)
+    return await signInWithPopup(auth, provider)
   }
 
   const logout = async () => {

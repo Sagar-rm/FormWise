@@ -33,8 +33,6 @@ import {
   HelpCircle,
   LogOut,
   Bell,
-  Folder,
-  Archive,
   Download,
   Upload,
   Shield,
@@ -42,11 +40,17 @@ import {
   Zap,
   Globe,
   Mail,
+  CheckCircle,
+  AlertCircle,
+  Info,
 } from "lucide-react"
 import Sidebar from "../components/sidebar"
 
 // Import the analytics hook
 import { useForms, useFormsAnalytics } from "../hooks/use-forms"
+import { useNotifications } from "../hooks/use-notifications"
+
+import { useAuth } from "../hooks/use-auth"
 
 // Replace the mock stats with real data
 export default function Dashboard() {
@@ -59,9 +63,11 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState("recent")
   const [filterStatus, setFilterStatus] = useState("all")
   const navigate = useNavigate()
-  const { forms, loading: formsLoading, deleteForm, duplicateForm } = useForms()
+  const { forms, loading: formsLoading, deleteForm, duplicateForm, shareForm } = useForms()
   const { analytics, loading: analyticsLoading } = useFormsAnalytics()
+  const { getRecentActivity, unreadCount } = useNotifications()
   const mobileActionsRef = useRef(null)
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -215,22 +221,23 @@ export default function Dashboard() {
     },
   ]
 
-  const handleShareForm = (formId, event) => {
+  const handleShareForm = async (formId, event) => {
     if (event) {
       event.stopPropagation()
     }
 
     const shareableLink = `${import.meta.env.VITE_SERVER_URL}/form/${formId}`
 
-    // Copy the link to the clipboard
-    navigator.clipboard
-      .writeText(shareableLink)
-      .then(() => {
-      })
-      .catch((error) => {
-        console.error("Error copying link: ", error)
-        alert("Failed to copy link. Please try again.")
-      })
+    try {
+      // Copy the link to the clipboard
+      await navigator.clipboard.writeText(shareableLink)
+
+      // Create notification for sharing
+      await shareForm(formId)
+    } catch (error) {
+      console.error("Error copying link: ", error)
+      alert("Failed to copy link. Please try again.")
+    }
   }
 
   const handleDeleteForm = async (formId, event) => {
@@ -266,6 +273,48 @@ export default function Dashboard() {
 
   const handleFormClick = (formId) => {
     navigate(`/form-responses/${formId}`)
+  }
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case "success":
+        return <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
+      case "warning":
+        return <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-600" />
+      case "error":
+        return <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
+      case "info":
+        return <Info className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
+      default:
+        return <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+    }
+  }
+
+  const getActivityBgColor = (type) => {
+    switch (type) {
+      case "success":
+        return "bg-green-100"
+      case "warning":
+        return "bg-yellow-100"
+      case "error":
+        return "bg-red-100"
+      case "info":
+        return "bg-blue-100"
+      default:
+        return "bg-gray-100"
+    }
+  }
+
+  const formatTimeAgo = (date) => {
+    if (!date) return "Unknown"
+
+    const now = new Date()
+    const diffInSeconds = Math.floor((now - date) / 1000)
+
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    return `${Math.floor(diffInSeconds / 86400)}d ago`
   }
 
   const renderEnhancedMobileBottomNav = () => (
@@ -338,7 +387,11 @@ export default function Dashboard() {
                   className="p-2 hover:bg-gray-100 rounded-lg relative"
                 >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -395,6 +448,11 @@ export default function Dashboard() {
                             >
                               <div className={item.active ? "text-purple-600" : "text-gray-500"}>{item.icon}</div>
                               <span className="font-medium">{item.label}</span>
+                              {item.label === "Notifications" && unreadCount > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                              )}
                             </button>
                           ))}
                         </div>
@@ -405,16 +463,16 @@ export default function Dashboard() {
                     <div className="border-t border-gray-200 pt-4 mt-6">
                       <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg mb-3">
                         <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          JD
+                          {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">John Doe</p>
-                          <p className="text-sm text-gray-500">john@example.com</p>
+                          <p className="font-medium text-gray-900">{user?.displayName || "User"}</p>
+                          <p className="text-sm text-gray-500">{user?.email}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => {
-                          // Handle logout
+                          logout()
                           setShowMobileMenu(false)
                         }}
                         className="flex items-center space-x-3 w-full p-3 rounded-lg text-red-600 hover:bg-red-50"
@@ -436,15 +494,28 @@ export default function Dashboard() {
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your forms.</p>
               </div>
-              <motion.button
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold flex items-center hover:shadow-lg transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/builder/new")}
-              >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Create New Form
-              </motion.button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigate("/notifications")}
+                  className="relative p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <motion.button
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold flex items-center hover:shadow-lg transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate("/builder/new")}
+                >
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  Create New Form
+                </motion.button>
+              </div>
             </div>
           )}
 
@@ -750,7 +821,7 @@ export default function Dashboard() {
                       .map((form, index) => (
                         <motion.div
                           key={form.id}
-                          className="p-4 sm:p-6 hover:bg-gray-50 transition-colors"
+                          className="p-4 sm:p-6 hover:bg-gray-50 transition-colors cursor-pointer"
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -953,35 +1024,48 @@ export default function Dashboard() {
 
               {/* Recent Activity */}
               <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Recent Activity</h2>
+                  <button
+                    onClick={() => navigate("/notifications")}
+                    className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+                  >
+                    View All
+                  </button>
+                </div>
                 <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
+                  {getRecentActivity(5).length === 0 ? (
+                    <div className="text-center py-8">
+                      <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">No recent activity</p>
+                      <p className="text-xs text-gray-400 mt-1">Activity will appear here as you use FormWise</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">New response received</p>
-                      <p className="text-xs text-gray-500">Customer Feedback Survey • 2 min ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">Form updated</p>
-                      <p className="text-xs text-gray-500">Event Registration Form • 1 hour ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">Form shared</p>
-                      <p className="text-xs text-gray-500">Product Feedback • 3 hours ago</p>
-                    </div>
-                  </div>
+                  ) : (
+                    getRecentActivity(5).map((activity, index) => (
+                      <motion.div
+                        key={activity.id}
+                        className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        onClick={() => activity.actionUrl && navigate(activity.actionUrl)}
+                      >
+                        <div
+                          className={`w-6 h-6 sm:w-8 sm:h-8 ${getActivityBgColor(activity.type)} rounded-full flex items-center justify-center flex-shrink-0`}
+                        >
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 font-medium">{activity.title}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {activity.formTitle
+                              ? `${activity.formTitle} • ${formatTimeAgo(activity.createdAt)}`
+                              : formatTimeAgo(activity.createdAt)}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

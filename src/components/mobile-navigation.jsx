@@ -23,10 +23,12 @@ import {
   Mail,
   Layout,
 } from "lucide-react"
+import { useAuth } from "../hooks/use-auth"
 
 const MobileNavigation = ({ activePath }) => {
   const navigate = useNavigate()
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const { logout } = useAuth()
 
   // Enhanced mobile menu items to match all sidebar sections
   const mobileMenuSections = [
@@ -236,6 +238,7 @@ const MobileNavigation = ({ activePath }) => {
                   <button
                     onClick={() => {
                       // Handle logout
+                      logout()
                       setShowMobileMenu(false)
                     }}
                     className="flex items-center space-x-3 w-full p-3 rounded-lg text-red-600 hover:bg-red-50"
