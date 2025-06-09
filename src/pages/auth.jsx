@@ -32,7 +32,13 @@ export default function AuthPage() {
       if (isLogin) {
         await signIn(formData.email, formData.password, rememberMe)
       } else {
-        await signUp(formData.email, formData.password)
+        // Validate name for signup
+        if (!formData.name.trim()) {
+          setError("Please enter your full name")
+          setLoading(false)
+          return
+        }
+        await signUp(formData.email, formData.password, formData.name.trim())
       }
       navigate("/dashboard")
     } catch (error) {
@@ -167,6 +173,7 @@ export default function AuthPage() {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     placeholder="Enter your full name"
                     required={!isLogin}
+                    minLength={2}
                   />
                 </div>
               </div>

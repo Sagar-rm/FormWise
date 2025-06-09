@@ -18,6 +18,10 @@ import Notifications from "./pages/notifications"
 import NotFoundPage from "./pages/404"
 import Help from "./pages/help"
 import Support from "./pages/support"
+import ProfileSettings from "./components/profile-settings"
+import Integrations from "./pages/integrations"
+import Webhooks from "./pages/webhooks"
+import Import from "./pages/import"
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -109,6 +113,39 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Forms />
+          </ProtectedRoute>
+        }
+      />
+
+                  <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfileSettings />
+          </ProtectedRoute>
+        }
+      />
+                        <Route
+        path="/import"
+        element={
+          <ProtectedRoute>
+            <Import />
+          </ProtectedRoute>
+        }
+      />
+                        <Route
+        path="/integrations"
+        element={
+          <ProtectedRoute>
+            <Integrations />
+          </ProtectedRoute>
+        }
+      />
+                        <Route
+        path="/webhooks"
+        element={
+          <ProtectedRoute>
+            <Webhooks />
           </ProtectedRoute>
         }
       />

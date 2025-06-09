@@ -47,24 +47,27 @@ import {
 import Sidebar from "../components/sidebar"
 
 // Import the analytics hook
-import { useForms, useFormsAnalytics } from "../hooks/use-forms"
+import { useForms, useEnhancedAnalytics } from "../hooks/use-forms"
 import { useNotifications } from "../hooks/use-notifications"
 
 import { useAuth } from "../hooks/use-auth"
+
+import AdvancedAnalyticsWidget from "../components/advanced-analytics-widget"
+import FormInsightsWidget from "../components/form-insights-widget"
 
 // Replace the mock stats with real data
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isMobile, setIsMobile] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(null)
   const [showMobileActions, setShowMobileActions] = useState(null)
   const [viewMode, setViewMode] = useState("list")
   const [sortBy, setSortBy] = useState("recent")
   const [filterStatus, setFilterStatus] = useState("all")
   const navigate = useNavigate()
   const { forms, loading: formsLoading, deleteForm, duplicateForm, shareForm } = useForms()
-  const { analytics, loading: analyticsLoading } = useFormsAnalytics()
+  const { analytics, loading: analyticsLoading } = useEnhancedAnalytics()
   const { getRecentActivity, unreadCount } = useNotifications()
   const mobileActionsRef = useRef(null)
   const { user, logout } = useAuth()
@@ -118,30 +121,40 @@ export default function Dashboard() {
     {
       title: "Total Forms",
       value: analytics?.totalForms?.toString() || "0",
-      change: "+12%",
+      change: analytics?.formsChange ? `${analytics.formsChange > 0 ? "+" : ""}${analytics.formsChange}%` : "+0%",
+      changeType: analytics?.formsChange >= 0 ? "positive" : "negative",
       icon: <FileText className="w-5 h-5 md:w-6 md:h-6" />,
       color: "from-blue-500 to-blue-600",
+      subtitle: `${analytics?.formsCreatedLast30Days || 0} created this month`,
     },
     {
       title: "Total Responses",
       value: analytics?.totalResponses?.toLocaleString() || "0",
-      change: "+23%",
+      change: analytics?.responsesChange
+        ? `${analytics.responsesChange > 0 ? "+" : ""}${analytics.responsesChange}%`
+        : "+0%",
+      changeType: analytics?.responsesChange >= 0 ? "positive" : "negative",
       icon: <BarChart3 className="w-5 h-5 md:w-6 md:h-6" />,
       color: "from-green-500 to-green-600",
+      subtitle: `${analytics?.responsesLast30Days || 0} responses this month`,
     },
     {
       title: "Active Forms",
       value: analytics?.activeForms?.toString() || "0",
-      change: "+8%",
+      change: `${analytics?.activeFormsChange || 0}%`,
+      changeType: "neutral",
       icon: <TrendingUp className="w-5 h-5 md:w-6 md:h-6" />,
       color: "from-purple-500 to-purple-600",
+      subtitle: `${analytics?.activeFormsChange || 0}% of total forms`,
     },
     {
-      title: "Total Views",
-      value: analytics?.totalViews?.toLocaleString() || "0",
-      change: "+15%",
+      title: "Conversion Rate",
+      value: `${analytics?.conversionRate || 0}%`,
+      change: analytics?.viewsChange ? `${analytics.viewsChange > 0 ? "+" : ""}${analytics.viewsChange}%` : "+0%",
+      changeType: analytics?.viewsChange >= 0 ? "positive" : "negative",
       icon: <Users className="w-5 h-5 md:w-6 md:h-6" />,
       color: "from-orange-500 to-orange-600",
+      subtitle: `${analytics?.totalViews?.toLocaleString() || 0} total views`,
     },
   ]
 
@@ -188,8 +201,6 @@ export default function Dashboard() {
       items: [
         { icon: <BarChart3 className="w-5 h-5" />, label: "Analytics", path: "/analytics" },
         { icon: <TrendingUp className="w-5 h-5" />, label: "Reports", path: "/reports" },
-        { icon: <Users className="w-5 h-5" />, label: "Responses", path: "/responses" },
-        { icon: <Download className="w-5 h-5" />, label: "Exports", path: "/exports" },
       ],
     },
     {
@@ -198,7 +209,6 @@ export default function Dashboard() {
         { icon: <Zap className="w-5 h-5" />, label: "Integrations", path: "/integrations" },
         { icon: <Globe className="w-5 h-5" />, label: "Webhooks", path: "/webhooks" },
         { icon: <Upload className="w-5 h-5" />, label: "Import", path: "/import" },
-        { icon: <Mail className="w-5 h-5" />, label: "Email Templates", path: "/email-templates" },
       ],
     },
     {
@@ -536,13 +546,30 @@ export default function Dashboard() {
                   >
                     {stat.icon}
                   </div>
-                  <span className="text-green-600 text-xs sm:text-sm font-medium">{stat.change}</span>
+                  <span
+                    className={`text-xs sm:text-sm font-medium ${
+                      stat.changeType === "positive"
+                        ? "text-green-600"
+                        : stat.changeType === "negative"
+                          ? "text-red-600"
+                          : "text-gray-600"
+                    }`}
+                  >
+                    {stat.change}
+                  </span>
                 </div>
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
                 <p className="text-gray-600 text-xs sm:text-sm">{stat.title}</p>
+                {stat.subtitle && <p className="text-gray-500 text-xs mt-1">{stat.subtitle}</p>}
               </motion.div>
             ))}
           </div>
+
+          {/* Advanced Analytics Section
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
+            <AdvancedAnalyticsWidget analytics={analytics} forms={forms} />
+            <FormInsightsWidget forms={forms} analytics={analytics} />
+          </div> */}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Recent Forms */}

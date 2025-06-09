@@ -22,13 +22,16 @@ import {
   CreditCard,
   Mail,
   Layout,
+  Zap,
+  Globe,
+  Upload,
 } from "lucide-react"
 import { useAuth } from "../hooks/use-auth"
 
 const MobileNavigation = ({ activePath }) => {
   const navigate = useNavigate()
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
 
   // Enhanced mobile menu items to match all sidebar sections
   const mobileMenuSections = [
@@ -73,6 +76,14 @@ const MobileNavigation = ({ activePath }) => {
         },
       ],
     },
+        {
+          title: "Tools & Integrations",
+          items: [
+            { icon: <Zap className="w-5 h-5" />, label: "Integrations", path: "/integrations" },
+            { icon: <Globe className="w-5 h-5" />, label: "Webhooks", path: "/webhooks" },
+            { icon: <Upload className="w-5 h-5" />, label: "Import", path: "/import" },
+          ],
+        },
     {
       title: "Account & Settings",
       items: [
@@ -231,8 +242,8 @@ const MobileNavigation = ({ activePath }) => {
                       JD
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">John Doe</p>
-                      <p className="text-sm text-gray-500">john@example.com</p>
+                      <p className="font-medium text-gray-900">{user.displayName || "User"}</p>
+                      <p className="text-sm text-gray-500">{user.email || "Email"}</p>
                     </div>
                   </div>
                   <button
