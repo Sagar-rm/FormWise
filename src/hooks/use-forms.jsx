@@ -73,8 +73,10 @@ export const useForms = () => {
 
       const docRef = await addDoc(collection(db, "forms"), newForm)
 
-      // Create notification for form creation
-      await createNotification(NotificationHelpers.formCreated(formData.title, docRef.id))
+      // Create notification for form creation (non-blocking)
+      createNotification(NotificationHelpers.formCreated(formData.title, docRef.id)).catch((error) => {
+        console.warn("Failed to create notification:", error)
+      })
 
       return docRef.id
     } catch (error) {
@@ -100,11 +102,19 @@ export const useForms = () => {
         updatedAt: Timestamp.now(),
       })
 
-      // Create notifications for specific updates
+      // Create notifications for specific updates (non-blocking)
       if (updates.status === "published" && currentData.status !== "published") {
-        await createNotification(NotificationHelpers.formPublished(updates.title || currentData.title, formId))
+        createNotification(NotificationHelpers.formPublished(updates.title || currentData.title, formId)).catch(
+          (error) => {
+            console.warn("Failed to create notification:", error)
+          },
+        )
       } else if (updates.title || updates.fields) {
-        await createNotification(NotificationHelpers.formUpdated(updates.title || currentData.title, formId))
+        createNotification(NotificationHelpers.formUpdated(updates.title || currentData.title, formId)).catch(
+          (error) => {
+            console.warn("Failed to create notification:", error)
+          },
+        )
       }
     } catch (error) {
       console.error("Error updating form:", error)
@@ -130,8 +140,10 @@ export const useForms = () => {
       // Then delete the form
       await deleteDoc(doc(db, "forms", formId))
 
-      // Create notification for form deletion
-      await createNotification(NotificationHelpers.formDeleted(formTitle))
+      // Create notification for form deletion (non-blocking)
+      createNotification(NotificationHelpers.formDeleted(formTitle)).catch((error) => {
+        console.warn("Failed to create notification:", error)
+      })
     } catch (error) {
       console.error("Error deleting form:", error)
       throw error
@@ -179,8 +191,10 @@ export const useForms = () => {
 
       const newFormId = await createForm(duplicatedForm)
 
-      // Create notification for duplication (override the creation notification)
-      await createNotification(NotificationHelpers.formDuplicated(form.title, newFormId))
+      // Create notification for duplication (non-blocking)
+      createNotification(NotificationHelpers.formDuplicated(form.title, newFormId)).catch((error) => {
+        console.warn("Failed to create notification:", error)
+      })
 
       return newFormId
     } catch (error) {
@@ -205,8 +219,10 @@ export const useForms = () => {
       const form = await getForm(formId)
       if (!form) throw new Error("Form not found")
 
-      // Create notification for sharing
-      await createNotification(NotificationHelpers.formShared(form.title, formId))
+      // Create notification for sharing (non-blocking)
+      createNotification(NotificationHelpers.formShared(form.title, formId)).catch((error) => {
+        console.warn("Failed to create notification:", error)
+      })
     } catch (error) {
       console.error("Error sharing form:", error)
       throw error
@@ -261,7 +277,6 @@ export const useFormResponses = (formId) => {
     return unsubscribe
   }, [formId])
 
-
   const submitResponse = async (formId, responseData, metadata = {}) => {
     try {
       const response = {
@@ -273,7 +288,7 @@ export const useFormResponses = (formId) => {
         ...metadata,
       }
 
-      // Add the response
+      // Add the response first
       await addDoc(collection(db, "formResponses"), response)
 
       // Get form details and update response count
@@ -288,11 +303,14 @@ export const useFormResponses = (formId) => {
         lastResponseAt: Timestamp.now(),
       })
 
-      // Create notification for new response (only for form owner)
+      // Create notification for new response (non-blocking, fire-and-forget)
       if (formData.userId) {
-        await createNotification({
+        createNotification({
           ...NotificationHelpers.responseReceived(formData.title, formId, newResponseCount),
-          userId: formData.userId, // Override to send to form owner
+          userId: formData.userId,
+        }).catch((error) => {
+          console.warn("Failed to create notification:", error)
+          // Don't throw - notification failure shouldn't affect form submission
         })
       }
 
