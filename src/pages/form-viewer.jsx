@@ -115,7 +115,7 @@ export default function FormViewer() {
       setSubmitted(true)
     } catch (error) {
       console.error("Error submitting form:", error)
-      alert("Failed to submit form. Please try again.")
+      alert("Failed to submit form. Please try again.", error)
     } finally {
       setSubmitting(false)
     }
