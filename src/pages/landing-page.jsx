@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Helmet } from "react-helmet"
 import { useNavigate } from "react-router-dom"
 import {
   Menu,
@@ -1010,6 +1011,47 @@ const Footer = () => {
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
+       <Helmet>
+        <title>FormWise – Build Beautiful Forms Easily</title>
+        <meta
+          name="description"
+          content="FormWise lets you build beautiful, smart forms with logic, analytics, and themes. Better than Google Forms."
+        />
+        <meta
+          name="keywords"
+          content="form builder, online forms, google forms alternative, survey builder, interactive forms"
+        />
+        <meta name="author" content="FormWise Team" />
+        <meta property="og:title" content="FormWise – Smart Form Builder" />
+        <meta
+          property="og:description"
+          content="Create beautiful forms with logic, analytics, and themes. Try FormWise free today."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://formwise.pages.dev/" />
+        <meta property="og:image" content="/formwise-preview.png" />
+        <link rel="canonical" href="https://formwise.pages.dev/" />
+
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "FormWise",
+              "description": "Smart, beautiful online form builder for surveys and more.",
+              "applicationCategory": "BusinessApplication",
+              "url": "https://formwise.pages.dev/",
+              "operatingSystem": "All",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            }
+          `}
+        </script>
+      </Helmet>
+
       <Header />
       <HeroSection />
       <FeaturesSection />
