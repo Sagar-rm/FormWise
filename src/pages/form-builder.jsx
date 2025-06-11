@@ -62,7 +62,10 @@ export default function FormBuilder() {
   const [mobileEditMode, setMobileEditMode] = useState("fields") // fields, design, logic, settings
   const [showMobileFieldOptions, setShowMobileFieldOptions] = useState(false)
   const [showMobileContextMenu, setShowMobileContextMenu] = useState(null)
-  const [showMobileBottomMenu, setShowMobileBottomMenu] = useState(false)
+
+  // Mobile FAB states
+  const [showMobileFAB, setShowMobileFAB] = useState(false)
+  const [isFABOpen, setIsFABOpen] = useState(false)
 
   // Form states
   const [formTitle, setFormTitle] = useState("Untitled Form")
@@ -109,12 +112,14 @@ export default function FormBuilder() {
 
       setScreenSize(newScreenSize)
       setIsMobile(isMobileView)
+      setShowMobileFAB(isMobileView)
 
       // Auto-close panels on larger screens
       if (newScreenSize.includes("desktop")) {
         setShowLeftPanel(false)
         setShowRightPanel(false)
         setShowMobilePreview(false)
+        setIsFABOpen(false)
       }
     }
 
@@ -191,6 +196,7 @@ export default function FormBuilder() {
     // Close mobile panels after adding field
     if (screenSize !== "desktop") {
       setShowLeftPanel(false)
+      setIsFABOpen(false)
 
       // Auto-scroll to the new field in mobile view
       setTimeout(() => {
@@ -342,6 +348,38 @@ export default function FormBuilder() {
     dragItem.current = null
     dragOverItem.current = null
   }
+
+  // Mobile FAB actions
+  const mobileActions = [
+    {
+      id: "add-field",
+      label: "Add Field",
+      icon: <Plus className="w-5 h-5" />,
+      color: "bg-purple-600",
+      action: () => setShowLeftPanel(true),
+    },
+    {
+      id: "preview",
+      label: "Preview",
+      icon: <Eye className="w-5 h-5" />,
+      color: "bg-blue-600",
+      action: () => setShowMobilePreview(!showMobilePreview),
+    },
+    {
+      id: "design",
+      label: "Design",
+      icon: <Palette className="w-5 h-5" />,
+      color: "bg-pink-600",
+      action: () => setMobileEditMode("design"),
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <Settings className="w-5 h-5" />,
+      color: "bg-gray-600",
+      action: () => setMobileEditMode("settings"),
+    },
+  ]
 
   const renderField = (field, isPreview = false) => {
     const baseClasses = isPreview
@@ -1204,82 +1242,6 @@ export default function FormBuilder() {
     )
   }
 
-  // Mobile bottom menu
-  const renderMobileBottomMenu = () => {
-    if (!showMobileBottomMenu) return null
-
-    return (
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-30" onClick={() => setShowMobileBottomMenu(false)}>
-        <div
-          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl p-4 space-y-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
-
-          <h3 className="font-medium text-gray-900 mb-4 text-center">Form Tools</h3>
-
-          <button
-            onClick={() => {
-              setShowLeftPanel(true)
-              setShowMobileBottomMenu(false)
-            }}
-            className="w-full flex items-center p-4 hover:bg-gray-50 rounded-lg"
-          >
-            <Plus className="w-6 h-6 mr-4 text-purple-600" />
-            <div className="text-left">
-              <span className="block font-medium">Add Fields</span>
-              <span className="block text-sm text-gray-500">Add new form fields</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              setMobileEditMode("design")
-              setShowMobileBottomMenu(false)
-            }}
-            className="w-full flex items-center p-4 hover:bg-gray-50 rounded-lg"
-          >
-            <Palette className="w-6 h-6 mr-4 text-blue-600" />
-            <div className="text-left">
-              <span className="block font-medium">Design</span>
-              <span className="block text-sm text-gray-500">Customize appearance</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              setMobileEditMode("settings")
-              setShowMobileBottomMenu(false)
-            }}
-            className="w-full flex items-center p-4 hover:bg-gray-50 rounded-lg"
-          >
-            <Settings className="w-6 h-6 mr-4 text-gray-600" />
-            <div className="text-left">
-              <span className="block font-medium">Settings</span>
-              <span className="block text-sm text-gray-500">Form configuration</span>
-            </div>
-          </button>
-
-          <button
-            onClick={() => {
-              setShowMobilePreview(!showMobilePreview)
-              setShowMobileBottomMenu(false)
-            }}
-            className="w-full flex items-center p-4 hover:bg-gray-50 rounded-lg"
-          >
-            <Eye className="w-6 h-6 mr-4 text-green-600" />
-            <div className="text-left">
-              <span className="block font-medium">{showMobilePreview ? "Edit Mode" : "Preview"}</span>
-              <span className="block text-sm text-gray-500">
-                {showMobilePreview ? "Return to editing" : "Preview your form"}
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   // Mobile design editor
   const renderMobileDesignEditor = () => {
     return (
@@ -1488,6 +1450,78 @@ export default function FormBuilder() {
     )
   }
 
+  // Mobile Floating Action Button
+  const renderMobileFAB = () => {
+    if (!showMobileFAB || !isMobile) return null
+
+    return (
+      <>
+        {/* FAB Backdrop */}
+        <AnimatePresence>
+          {isFABOpen && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-20 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFABOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* FAB Container */}
+        <div className="fixed bottom-20 right-4 z-50">
+          {/* Action Buttons */}
+          <AnimatePresence>
+            {isFABOpen && (
+              <motion.div
+                className="flex flex-col space-y-3 mb-3"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {mobileActions.map((action, index) => (
+                  <motion.button
+                    key={action.id}
+                    className={`${action.color} text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all flex items-center justify-center min-w-[48px] h-12`}
+                    onClick={() => {
+                      action.action()
+                      setIsFABOpen(false)
+                    }}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {action.icon}
+                    <span className="ml-2 text-sm font-medium whitespace-nowrap">{action.label}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main FAB Button */}
+          <motion.button
+            className={`bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all ${
+              isFABOpen ? "rotate-45" : "rotate-0"
+            }`}
+            onClick={() => setIsFABOpen(!isFABOpen)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{ rotate: isFABOpen ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Plus className="w-6 h-6" />
+          </motion.button>
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
@@ -1532,45 +1566,6 @@ export default function FormBuilder() {
             </div>
 
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-              {/* Mobile/Tablet controls */}
-              {isMobile && (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className={`bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 flex-shrink-0 ${
-                      screenSize === "mobile-sm"
-                        ? "px-2 py-1.5 text-xs"
-                        : screenSize === "mobile"
-                          ? "px-3 py-2 text-sm"
-                          : "px-3 lg:px-4 py-2 text-sm"
-                    }`}
-                  >
-                    <Save className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
-                    <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>
-                      {saving ? "Saving..." : "Save"}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={handlePublish}
-                    disabled={saving}
-                    className={`bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 flex-shrink-0 ${
-                      screenSize === "mobile-sm"
-                        ? "px-2 py-1.5 text-xs"
-                        : screenSize === "mobile"
-                          ? "px-3 py-2 text-sm"
-                          : "px-3 lg:px-4 py-2 text-sm"
-                    }`}
-                  >
-                    <Globe className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
-                    <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>
-                      Public
-                    </span>
-                  </button>
-                </>
-              )}
-
               {/* Desktop controls */}
               {!isMobile && (
                 <>
@@ -1607,4 +1602,449 @@ export default function FormBuilder() {
                 </>
               )}
 
-              
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={`bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 flex-shrink-0 ${
+                  screenSize === "mobile-sm"
+                    ? "px-2 py-1.5 text-xs"
+                    : screenSize === "mobile"
+                      ? "px-3 py-2 text-sm"
+                      : "px-3 lg:px-4 py-2 text-sm"
+                }`}
+              >
+                <Save className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>
+                  {saving ? "Saving..." : "Save"}
+                </span>
+              </button>
+
+              <button
+                onClick={handlePublish}
+                disabled={saving}
+                className={`bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 flex-shrink-0 ${
+                  screenSize === "mobile-sm"
+                    ? "px-2 py-1.5 text-xs"
+                    : screenSize === "mobile"
+                      ? "px-3 py-2 text-sm"
+                      : "px-3 lg:px-4 py-2 text-sm"
+                }`}
+              >
+                <Globe className={`mr-1 lg:mr-2 inline ${screenSize === "mobile-sm" ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span className={screenSize.includes("mobile") ? "hidden sm:inline" : "hidden lg:inline"}>Publish</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex min-h-0">
+          {/* Left Panel - Desktop with responsive width */}
+          {!isMobile && (
+            <div className={`flex-shrink-0 ${screenSize === "desktop-sm" ? "w-56" : "w-64"}`}>{renderLeftPanel()}</div>
+          )}
+
+          {/* Form Canvas with responsive width */}
+          <div className="flex-1 overflow-auto min-w-0">
+            {/* Mobile/Tablet: Show preview or builder */}
+            {isMobile ? (
+              <div className="h-full">
+                {showMobilePreview ? (
+                  // Mobile/Tablet Preview Mode
+                  <div className={`bg-gray-50 h-full ${screenSize.includes("mobile") ? "p-2 sm:p-4" : "p-4 lg:p-6"}`}>
+                    <div
+                      className={`mx-auto bg-white rounded-lg shadow-sm border border-gray-200 ${
+                        screenSize === "mobile-sm"
+                          ? "max-w-full"
+                          : screenSize === "mobile"
+                            ? "max-w-sm"
+                            : screenSize.includes("tablet")
+                              ? "max-w-2xl"
+                              : "max-w-3xl"
+                      }`}
+                    >
+                      <div className={`${screenSize.includes("mobile") ? "p-4 sm:p-6" : "p-6 lg:p-8"}`}>
+                        <div className="mb-6">
+                          <h1
+                            className={`font-bold mb-2 ${
+                              screenSize === "mobile-sm"
+                                ? "text-lg"
+                                : screenSize === "mobile"
+                                  ? "text-xl"
+                                  : "text-xl lg:text-2xl"
+                            }`}
+                            style={{ color: formSettings.textColor }}
+                          >
+                            {formTitle}
+                          </h1>
+                          {formDescription && (
+                            <p
+                              className={`text-gray-600 ${
+                                screenSize.includes("mobile") ? "text-sm" : "text-sm lg:text-base"
+                              }`}
+                            >
+                              {formDescription}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-4">
+                          {fields.length === 0 ? (
+                            <div className="text-center py-8">
+                              <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                              <p className="text-gray-600 text-sm">No fields added yet</p>
+                            </div>
+                          ) : (
+                            fields.map((field) => (
+                              <div key={field.id} className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-900">
+                                  {field.label}
+                                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                                </label>
+                                {field.description && <p className="text-xs text-gray-600">{field.description}</p>}
+                                {renderField(field, true)}
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {fields.length > 0 && (
+                          <div className="mt-6 pt-4 border-t border-gray-200">
+                            <button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold">
+                              {formSettings.submitButtonText}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Mobile/Tablet Builder Mode
+                  <div className="p-4 h-full">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
+                      <div className="p-4 h-full overflow-y-auto" ref={fieldContainerRef}>
+                        <div className="mb-6">
+                          <input
+                            type="text"
+                            value={formTitle}
+                            onChange={(e) => setFormTitle(e.target.value)}
+                            className={`font-bold w-full bg-transparent border-none focus:outline-none focus:ring-0 p-0 mb-2 ${
+                              screenSize === "mobile" ? "text-xl" : "text-2xl"
+                            }`}
+                            placeholder="Form Title"
+                          />
+                          <textarea
+                            value={formDescription}
+                            onChange={(e) => setFormDescription(e.target.value)}
+                            className="w-full text-gray-600 bg-transparent border-none focus:outline-none focus:ring-0 p-0 resize-none text-sm"
+                            placeholder="Add a description..."
+                            rows={2}
+                          />
+                        </div>
+
+                        <div className="space-y-4">
+                          {fields.length === 0 ? (
+                            <div className="text-center py-8">
+                              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                              <h3
+                                className={`font-medium text-gray-900 mb-2 ${
+                                  screenSize === "mobile" ? "text-lg" : "text-xl"
+                                }`}
+                              >
+                                Start building
+                              </h3>
+                              <p className="text-gray-600 mb-4 text-sm">Tap the + button to add your first field</p>
+                              <button
+                                onClick={() => setIsFABOpen(true)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
+                              >
+                                <Plus className="w-4 h-4 mr-2 inline" />
+                                Add Field
+                              </button>
+                            </div>
+                          ) : (
+                            fields.map((field, index) => (
+                              <motion.div
+                                key={field.id}
+                                id={`field-${field.id}`}
+                                className={`field-item relative p-3 border-2 rounded-lg transition-all ${
+                                  selectedField === field.id ? "border-purple-300 bg-purple-50" : "border-gray-200"
+                                }`}
+                                onClick={() => setSelectedField(field.id)}
+                                onTouchStart={() => handleTouchDragStart(index)}
+                                onTouchMove={(e) => handleTouchDragMove(e, index)}
+                                onTouchEnd={handleTouchDragEnd}
+                                layout
+                              >
+                                <div className="mb-2">
+                                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                                    {field.label}
+                                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                                  </label>
+                                  {field.description && (
+                                    <p className="text-xs text-gray-600 mb-2">{field.description}</p>
+                                  )}
+                                </div>
+
+                                {renderField(field, false)}
+
+                                <div className="absolute top-2 right-2 flex space-x-1">
+                                  <button
+                                    className="p-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 shadow-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSelectedField(field.id)
+                                      setShowMobileFieldOptions(true)
+                                    }}
+                                  >
+                                    <Edit2 className="w-3 h-3 text-gray-600" />
+                                  </button>
+                                  <button
+                                    className="p-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 shadow-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setShowMobileContextMenu(field.id)
+                                    }}
+                                  >
+                                    <MoreVertical className="w-3 h-3 text-gray-600" />
+                                  </button>
+                                </div>
+                              </motion.div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Desktop Layout
+              <div className={`${screenSize === "desktop-sm" ? "p-3 lg:p-6" : "p-4 lg:p-8"} h-full overflow-y-auto`}>
+                <div
+                  className={`mx-auto bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
+                    previewMode === "mobile"
+                      ? "max-w-sm"
+                      : previewMode === "tablet"
+                        ? "max-w-2xl"
+                        : screenSize === "desktop-sm"
+                          ? "max-w-5xl"
+                          : "max-w-6xl"
+                  }`}
+                  style={{
+                    backgroundColor: formSettings.backgroundColor,
+                    color: formSettings.textColor,
+                  }}
+                >
+                  {/* Form Header */}
+                  <div className="p-4 lg:p-8">
+                    {/* Form Header */}
+                    <div className="mb-8">
+                      <input
+                        type="text"
+                        value={formTitle}
+                        onChange={(e) => setFormTitle(e.target.value)}
+                        className="text-2xl font-bold w-full bg-transparent border-none focus:outline-none focus:ring-0 p-0 mb-2"
+                        placeholder="Form Title"
+                        style={{ color: formSettings.textColor }}
+                      />
+                      <textarea
+                        value={formDescription}
+                        onChange={(e) => setFormDescription(e.target.value)}
+                        className="w-full text-gray-600 bg-transparent border-none focus:outline-none focus:ring-0 p-0 resize-none"
+                        placeholder="Add a description for your form..."
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Form Fields */}
+                    <div className="space-y-6">
+                      {fields.length === 0 ? (
+                        <div className="text-center py-12">
+                          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Start building your form</h3>
+                          <p className="text-gray-600 mb-4">Add fields from the left panel to get started</p>
+                        </div>
+                      ) : (
+                        fields.map((field, index) => (
+                          <motion.div
+                            key={field.id}
+                            className={`group relative p-4 border-2 rounded-lg transition-all ${
+                              selectedField === field.id
+                                ? "border-purple-300 bg-purple-50"
+                                : "border-transparent hover:border-gray-200"
+                            }`}
+                            onClick={() => setSelectedField(field.id)}
+                            draggable={!showPreview}
+                            onDragStart={() => handleDragStart(index)}
+                            onDragEnter={() => handleDragEnter(index)}
+                            onDragEnd={handleDragEnd}
+                            layout
+                          >
+                            {!showPreview && (
+                              <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                              </div>
+                            )}
+
+                            <div className="mb-3">
+                              <label className="block text-sm font-medium text-gray-900 mb-1">
+                                {field.label}
+                                {field.required && <span className="text-red-500 ml-1">*</span>}
+                              </label>
+                              {field.description && <p className="text-sm text-gray-600 mb-2">{field.description}</p>}
+                            </div>
+
+                            {renderField(field, showPreview)}
+
+                            {!showPreview && selectedField === field.id && (
+                              <div className="absolute top-2 right-2 flex space-x-1">
+                                <button
+                                  className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    duplicateField(field.id)
+                                  }}
+                                >
+                                  <Copy className="w-3 h-3 text-gray-600" />
+                                </button>
+                                <button
+                                  className="p-1 bg-white border border-gray-200 rounded hover:bg-red-50 hover:border-red-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    deleteField(field.id)
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-600" />
+                                </button>
+                              </div>
+                            )}
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
+
+                    {showPreview && fields.length > 0 && (
+                      <div className="mt-8 pt-6 border-t border-gray-200">
+                        <button
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                          style={{
+                            backgroundColor:
+                              formSettings.backgroundColor === "#ffffff" ? undefined : formSettings.textColor,
+                          }}
+                        >
+                          {formSettings.submitButtonText}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Panel - Desktop with responsive width */}
+          {!isMobile && !showPreview && (
+            <div className={`flex-shrink-0 ${screenSize === "desktop-sm" ? "w-72" : "w-80"}`}>
+              {/* Desktop tabs */}
+              <div className="bg-white border-l border-gray-200 h-full">
+                <div className="flex border-b border-gray-200">
+                  {[
+                    { id: "properties", label: "Properties", icon: <Sliders className="w-4 h-4" /> },
+                    { id: "design", label: "Design", icon: <Palette className="w-4 h-4" /> },
+                    { id: "logic", label: "Logic", icon: <Zap className="w-4 h-4" /> },
+                    { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      className={`flex-1 flex items-center justify-center space-x-1 px-2 py-3 text-xs font-medium ${
+                        activeTab === tab.id
+                          ? "text-purple-600 border-b-2 border-purple-600"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                      onClick={() => setActiveTab(tab.id)}
+                    >
+                      {tab.icon}
+                      <span className="hidden lg:inline">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === "properties" && renderRightPanel()}
+                {activeTab === "design" && renderDesignPanel()}
+                {activeTab === "logic" && renderLogicPanel()}
+                {activeTab === "settings" && renderSettingsPanel()}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile/Tablet Panels with responsive widths */}
+      <AnimatePresence>
+        {isMobile && showLeftPanel && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowLeftPanel(false)}
+          >
+            <motion.div
+              className={`absolute left-0 top-0 bottom-0 ${
+                screenSize === "mobile-sm"
+                  ? "w-full max-w-[95vw]"
+                  : screenSize === "mobile"
+                    ? "w-80 max-w-[90vw]"
+                    : "w-96 max-w-[85vw]"
+              }`}
+              initial={{ x: -400 }}
+              animate={{ x: 0 }}
+              exit={{ x: -400 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {renderLeftPanel()}
+            </motion.div>
+          </motion.div>
+        )}
+
+        {isMobile && showRightPanel && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-black bg-opacity-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowRightPanel(false)}
+          >
+            <motion.div
+              className={`absolute right-0 top-0 bottom-0 ${
+                screenSize === "mobile-sm"
+                  ? "w-full max-w-[95vw]"
+                  : screenSize === "mobile"
+                    ? "w-80 max-w-[90vw]"
+                    : "w-96 max-w-[85vw]"
+              }`}
+              initial={{ x: 400 }}
+              animate={{ x: 0 }}
+              exit={{ x: 400 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {renderRightPanel()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Navigation */}
+      {isMobile && <MobileNavigation />}
+
+      {/* Mobile Floating Action Button */}
+      {renderMobileFAB()}
+
+      {/* Mobile-specific overlays */}
+      {isMobile && showMobileFieldOptions && renderMobileFieldEditor()}
+      {isMobile && mobileEditMode === "design" && renderMobileDesignEditor()}
+      {isMobile && mobileEditMode === "settings" && renderMobileSettingsEditor()}
+      {isMobile && renderMobileContextMenu()}
+    </div>
+  )
+}
