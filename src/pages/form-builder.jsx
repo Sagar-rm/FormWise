@@ -63,6 +63,10 @@ export default function FormBuilder() {
   const [showMobileFieldOptions, setShowMobileFieldOptions] = useState(false)
   const [showMobileContextMenu, setShowMobileContextMenu] = useState(null)
 
+  // Mobile FAB states
+  const [showMobileFAB, setShowMobileFAB] = useState(false)
+  const [isFABOpen, setIsFABOpen] = useState(false)
+
   // Form states
   const [formTitle, setFormTitle] = useState("Untitled Form")
   const [formDescription, setFormDescription] = useState("")
@@ -108,12 +112,14 @@ export default function FormBuilder() {
 
       setScreenSize(newScreenSize)
       setIsMobile(isMobileView)
+      setShowMobileFAB(isMobileView)
 
       // Auto-close panels on larger screens
       if (newScreenSize.includes("desktop")) {
         setShowLeftPanel(false)
         setShowRightPanel(false)
         setShowMobilePreview(false)
+        setIsFABOpen(false)
       }
     }
 
@@ -190,6 +196,7 @@ export default function FormBuilder() {
     // Close mobile panels after adding field
     if (screenSize !== "desktop") {
       setShowLeftPanel(false)
+      setIsFABOpen(false)
 
       // Auto-scroll to the new field in mobile view
       setTimeout(() => {
@@ -341,6 +348,38 @@ export default function FormBuilder() {
     dragItem.current = null
     dragOverItem.current = null
   }
+
+  // Mobile FAB actions
+  const mobileActions = [
+    {
+      id: "add-field",
+      label: "Add Field",
+      icon: <Plus className="w-5 h-5" />,
+      color: "bg-purple-600",
+      action: () => setShowLeftPanel(true),
+    },
+    {
+      id: "preview",
+      label: "Preview",
+      icon: <Eye className="w-5 h-5" />,
+      color: "bg-blue-600",
+      action: () => setShowMobilePreview(!showMobilePreview),
+    },
+    {
+      id: "design",
+      label: "Design",
+      icon: <Palette className="w-5 h-5" />,
+      color: "bg-pink-600",
+      action: () => setMobileEditMode("design"),
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: <Settings className="w-5 h-5" />,
+      color: "bg-gray-600",
+      action: () => setMobileEditMode("settings"),
+    },
+  ]
 
   const renderField = (field, isPreview = false) => {
     const baseClasses = isPreview
@@ -1411,6 +1450,78 @@ export default function FormBuilder() {
     )
   }
 
+  // Mobile Floating Action Button
+  const renderMobileFAB = () => {
+    if (!showMobileFAB || !isMobile) return null
+
+    return (
+      <>
+        {/* FAB Backdrop */}
+        <AnimatePresence>
+          {isFABOpen && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-20 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFABOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* FAB Container */}
+        <div className="fixed bottom-20 right-4 z-50">
+          {/* Action Buttons */}
+          <AnimatePresence>
+            {isFABOpen && (
+              <motion.div
+                className="flex flex-col space-y-3 mb-3"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {mobileActions.map((action, index) => (
+                  <motion.button
+                    key={action.id}
+                    className={`${action.color} text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all flex items-center justify-center min-w-[48px] h-12`}
+                    onClick={() => {
+                      action.action()
+                      setIsFABOpen(false)
+                    }}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {action.icon}
+                    <span className="ml-2 text-sm font-medium whitespace-nowrap">{action.label}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main FAB Button */}
+          <motion.button
+            className={`bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all ${
+              isFABOpen ? "rotate-45" : "rotate-0"
+            }`}
+            onClick={() => setIsFABOpen(!isFABOpen)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{ rotate: isFABOpen ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Plus className="w-6 h-6" />
+          </motion.button>
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar */}
@@ -1455,47 +1566,6 @@ export default function FormBuilder() {
             </div>
 
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-              {/* Mobile/Tablet controls */}
-              {isMobile && (
-                <>
-                  <button
-                    onClick={() => setShowLeftPanel(true)}
-                    className="p-1.5 sm:p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 flex-shrink-0"
-                    title="Add Fields"
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-
-                  <button
-                    onClick={() => setMobileEditMode("design")}
-                    className="p-1.5 sm:p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex-shrink-0"
-                    title="Design"
-                  >
-                    <Palette className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-
-                  <button
-                    onClick={() => setMobileEditMode("settings")}
-                    className="p-1.5 sm:p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 flex-shrink-0"
-                    title="Settings"
-                  >
-                    <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-
-                  <button
-                    onClick={() => setShowMobilePreview(!showMobilePreview)}
-                    className={`p-1.5 sm:p-2 rounded-lg font-medium transition-all flex-shrink-0 ${
-                      showMobilePreview
-                        ? "bg-gray-200 text-gray-700"
-                        : "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                    }`}
-                    title="Preview"
-                  >
-                    <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-                </>
-              )}
-
               {/* Desktop controls */}
               {!isMobile && (
                 <>
@@ -1684,7 +1754,7 @@ export default function FormBuilder() {
                               </h3>
                               <p className="text-gray-600 mb-4 text-sm">Tap the + button to add your first field</p>
                               <button
-                                onClick={() => setShowLeftPanel(true)}
+                                onClick={() => setIsFABOpen(true)}
                                 className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
                               >
                                 <Plus className="w-4 h-4 mr-2 inline" />
@@ -1966,6 +2036,9 @@ export default function FormBuilder() {
 
       {/* Mobile Navigation */}
       {isMobile && <MobileNavigation />}
+
+      {/* Mobile Floating Action Button */}
+      {renderMobileFAB()}
 
       {/* Mobile-specific overlays */}
       {isMobile && showMobileFieldOptions && renderMobileFieldEditor()}
