@@ -30,14 +30,12 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { useFormResponses, useForms } from "../hooks/use-forms"
-import { useAuth } from "../hooks/use-auth"
 import Sidebar from "../components/sidebar"
 
 const FormResponses = () => {
   const { formId } = useParams()
-  const { user } = useAuth()
   const { responses, loading: loadingResponses, deleteResponse } = useFormResponses(formId)
-  const { getForm, updateForm } = useForms()
+  const { getForm } = useForms()
   const [form, setForm] = useState(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -224,7 +222,7 @@ const FormResponses = () => {
 
       const row = [
         response.id,
-        format(response.submittedAt, "yyyy-MM-dd HH:mm:ss"),
+        response.submittedAt ? format(response.submittedAt, "yyyy-MM-dd HH:mm:ss") : "N/A",
         device,
         isStarred,
         isFlagged,
@@ -262,15 +260,15 @@ const FormResponses = () => {
       }
 
       // Apply starred filter
-      if (filterConfig.status === "starred") {
-        return starredResponses.includes(response.id)
+      if (filterConfig.status === "starred" && !starredResponses.includes(response.id)) {
+        return false
       }
 
       // Apply flagged filter
-      if (filterConfig.flagged === "flagged") {
-        return flaggedResponses.includes(response.id)
-      } else if (filterConfig.flagged === "unflagged") {
-        return !flaggedResponses.includes(response.id)
+      if (filterConfig.flagged === "flagged" && !flaggedResponses.includes(response.id)) {
+        return false
+      } else if (filterConfig.flagged === "unflagged" && flaggedResponses.includes(response.id)) {
+        return false
       }
 
       // Apply device filter
@@ -285,7 +283,9 @@ const FormResponses = () => {
       const key = sortConfig.key
 
       if (key === "submittedAt") {
-        return sortConfig.direction === "asc" ? a.submittedAt - b.submittedAt : b.submittedAt - a.submittedAt
+        const aTime = a.submittedAt ? a.submittedAt.getTime() : 0
+        const bTime = b.submittedAt ? b.submittedAt.getTime() : 0
+        return sortConfig.direction === "asc" ? aTime - bTime : bTime - aTime
       }
 
       // For response fields
@@ -308,7 +308,7 @@ const FormResponses = () => {
   // Analytics calculations
   const analytics = {
     total: responses.length,
-    today: responses.filter((r) => format(r.submittedAt, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")).length,
+    today: responses.filter((r) => r.submittedAt && format(r.submittedAt, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")).length,
     starred: starredResponses.length,
     flagged: flaggedResponses.length,
     devices: {
@@ -320,7 +320,7 @@ const FormResponses = () => {
 
   if (loading || loadingResponses) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-50">
         <Sidebar />
         <div className="flex-1 p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
@@ -342,7 +342,7 @@ const FormResponses = () => {
 
   if (!form) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-50">
         <Sidebar />
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
@@ -363,9 +363,6 @@ const FormResponses = () => {
     )
   }
 
-  // Get form fields for column headers
-  const formFields = form.fields || []
-
   // Get the most common fields from responses to show as columns
   const fieldFrequency = {}
   responses.forEach((response) => {
@@ -381,11 +378,9 @@ const FormResponses = () => {
     .map(([key]) => key)
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <div className="hidden md:block">
-        <Sidebar />
-      </div>
-      <div className="flex-1 w-full md:w-auto">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Sidebar />
+      <div className="flex-1 min-w-0 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-4 md:p-8">
           <div className="mb-6">
             <Link

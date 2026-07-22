@@ -1,5 +1,4 @@
-"use client"
-
+import { useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "./hooks/use-auth"
 import LandingPage from "./pages/landing-page"
@@ -22,6 +21,14 @@ import ProfileSettings from "./components/profile-settings"
 import Integrations from "./pages/integrations"
 import Webhooks from "./pages/webhooks"
 import Import from "./pages/import"
+import AboutPage from "./pages/about"
+import BlogPage from "./pages/blog"
+import PrivacyPage from "./pages/privacy"
+import TermsPage from "./pages/terms"
+import CookiesPage from "./pages/cookies"
+import DocumentationPage from "./pages/documentation"
+import ApiReferencePage from "./pages/api-reference"
+import StatusPage from "./pages/status"
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -47,6 +54,22 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/support" element={<Support />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/cookies" element={<CookiesPage />} />
+      <Route path="/documentation" element={<DocumentationPage />} />
+      <Route path="/api-reference" element={<ApiReferencePage />} />
+      <Route path="/status" element={<StatusPage />} />
+
+      {/* Public form viewer */}
+      <Route path="/form/:formId" element={<FormViewer />} />
+
+      {/* Protected routes */}
       <Route
         path="/dashboard"
         element={
@@ -95,20 +118,23 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/form/:formId" element={<FormViewer />} />
-      <Route path="/form-responses/:formId" element={
-                  <ProtectedRoute>
-                    <FormResponses />
-                  </ProtectedRoute>
-                    } />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="*" element={<NotFoundPage />} />
-      <Route path="/notifications" element={<Notifications />} />
-            <Route path="/help" element={<Help />} />
-                        <Route path="/support" element={<Support />} />
-
-
-            <Route
+      <Route
+        path="/form-responses/:formId"
+        element={
+          <ProtectedRoute>
+            <FormResponses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/forms"
         element={
           <ProtectedRoute>
@@ -116,8 +142,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-                  <Route
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>
@@ -125,7 +150,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-                        <Route
+      <Route
         path="/import"
         element={
           <ProtectedRoute>
@@ -133,7 +158,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-                        <Route
+      <Route
         path="/integrations"
         element={
           <ProtectedRoute>
@@ -141,7 +166,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-                        <Route
+      <Route
         path="/webhooks"
         element={
           <ProtectedRoute>
@@ -149,12 +174,25 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Catch-all: must be last */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }
 
 // Main App Component
 export default function App() {
+  useEffect(() => {
+    const theme = localStorage.getItem("theme") || "light"
+    const root = window.document.documentElement
+    if (theme === "dark") {
+      root.classList.add("dark")
+    } else {
+      root.classList.remove("dark")
+    }
+  }, [])
+
   return (
     <AuthProvider>
       <Router>
