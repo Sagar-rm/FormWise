@@ -10,7 +10,6 @@ import { useUserProfile } from "../hooks/use-user-profile"
 import { useAuth } from "../hooks/use-auth"
 import { db } from "../lib/firebase"
 import { doc, updateDoc } from "firebase/firestore"
-import { createMockPaymentSession } from "../lib/cashfree"
 
 export default function Billing() {
   const navigate = useNavigate()
@@ -19,7 +18,7 @@ export default function Billing() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   
   // Real Firestore user profile state
-  const { userProfile, loading: profileLoading } = useUserProfile()
+  const { userProfile } = useUserProfile()
   const { user } = useAuth()
 
   // Cashfree integration states

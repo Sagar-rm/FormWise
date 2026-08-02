@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Helmet } from "react-helmet"
 import { useNavigate } from "react-router-dom"
@@ -27,19 +27,6 @@ import {
   Settings,
 } from "lucide-react"
 
-// Debounce function
-const debounce = (func, wait) => {
-  let timeout
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
-}
-
 // Hero Section
 const HeroSection = () => {
   const navigate = useNavigate()
@@ -50,7 +37,7 @@ const HeroSection = () => {
   const [formColor, setFormColor] = useState("purple") // purple, mint, teal, dark
   const [formFont, setFormFont] = useState("Inter") // Inter, Space Grotesk, Playfair Display
   const [formRadius, setFormRadius] = useState("rounded-xl") // rounded-none, rounded-xl, rounded-3xl
-  const [formShadow, setFormShadow] = useState("shadow-lg") // shadow-none, shadow-lg, shadow-brutal
+  const [formShadow] = useState("shadow-lg") // shadow-none, shadow-lg, shadow-brutal
 
   // Interactive forms state
   const [interactiveForms, setInteractiveForms] = useState([

@@ -56,7 +56,6 @@ export default function Templates() {
   const [favorites, setFavorites] = useState(new Set())
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [filterPayment, setFilterPayment] = useState(false)
   const [filterMultiStep, setFilterMultiStep] = useState(false)
@@ -672,7 +671,6 @@ export default function Templates() {
 
   const featuredTemplates = templates.filter((t) => t.uses > 15000).slice(0, 3)
   const trendingTemplates = templates.filter((t) => t.rating >= 4.8).slice(0, 4)
-  const newTemplates = templates.filter((t) => t.isNew)
 
   const filteredTemplates = templates
     .filter((template) => {
@@ -1223,7 +1221,7 @@ export default function Templates() {
             </AnimatePresence>
 
             {/* Categories */}
-            <div className={`mt-4 ${isMobile && !showFilters ? "" : ""}`}>
+            <div className="mt-4">
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
                   <button
